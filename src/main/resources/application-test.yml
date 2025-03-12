@@ -20,3 +20,8 @@ spring:
       host: localhost
       password: password
       port: 16697
+
+swyp:
+  jwt:
+    secret: fJm76UJ3g8JL5P9tM3vUZbpuNDKVwGD8RQeMbwu2T15iZpvTM0LQCqERiXqK4Xc0
+    access-token-validity-in-seconds: 86400
