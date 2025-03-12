@@ -23,6 +23,11 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: test
           MYSQL_DATABASE: SWYP_TEST
+      redis:
+        image: redis:7
+        ports:
+          - 16697:6379
+
 
     steps:
       - uses: actions/checkout@v3
