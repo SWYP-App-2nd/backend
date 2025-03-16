@@ -39,20 +39,6 @@ public class Role {
     private RoleType roleType;
 
     /**
-     * 특정 멤버와 권한으로 Role 객체 생성.
-     *
-     * @param member   멤버 객체
-     * @param roleType 권한 유형
-     * @return 생성된 Role 객체
-     */
-    public static Role createRole(Member member, RoleType roleType) {
-        return Role.builder()
-                .member(member)
-                .roleType(roleType)
-                .build();
-    }
-
-    /**
      * Spring Security에서 사용할 권한 문자열 반환.
      *
      * @return 권한 문자열

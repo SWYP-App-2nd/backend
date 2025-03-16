@@ -25,4 +25,16 @@ public enum RoleType {
     public String getAuthority() {
         return this.key;
     }
+
+    public static RoleType fromKey(String key) {
+        // 접두사가 없는 경우 처리
+        String searchKey = key.startsWith("ROLE_") ? key : "ROLE_" + key;
+
+        for (RoleType roleType : values()) {
+            if (roleType.getKey().equals(searchKey)) {
+                return roleType;
+            }
+        }
+        throw new IllegalArgumentException("키를 가진 열거형 상수가 없습니다. : " + key);
+    }
 }

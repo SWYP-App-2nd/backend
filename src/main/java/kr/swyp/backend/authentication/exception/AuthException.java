@@ -14,5 +14,6 @@ public class AuthException extends CommonException {
         CREDENTIAL_NOT_FOUND,
         TOKEN_ERROR,
         PERMISSION_DENIED,
+        TOKEN_RENEW_FAILED,
     }
 }

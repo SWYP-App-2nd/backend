@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import kr.swyp.backend.common.domain.BaseEntity;
+import kr.swyp.backend.member.enums.RoleType;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -98,5 +99,13 @@ public class Member extends BaseEntity implements UserDetails {
     @Override
     public boolean isEnabled() {
         return this.isActive && this.withdrawnAt == null;
+    }
+
+    public void addRole(RoleType roleType) {
+        Role role = Role.builder()
+                .member(this)
+                .roleType(roleType)
+                .build();
+        this.roles.add(role);
     }
 }

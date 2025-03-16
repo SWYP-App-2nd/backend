@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import kr.swyp.backend.authentication.dto.AuthenticationDto.UsernamePasswordAuthenticationRequest;
 import kr.swyp.backend.member.domain.Member;
+import kr.swyp.backend.member.enums.RoleType;
 import kr.swyp.backend.member.repository.MemberRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,10 +41,12 @@ public class UsernamePasswordAuthenticationTest {
 
     private final FieldDescriptor[] authenticationResponseDescriptor = {
             fieldWithPath("accessToken").description("엑세스 토큰"),
+            fieldWithPath("refreshTokenInfo").description("갱신 토큰 정보"),
+            fieldWithPath("refreshTokenInfo.token").description("갱신 토큰"),
+            fieldWithPath("refreshTokenInfo.expiresAt").description("갱신 토큰 만료 시각"),
     };
 
-
-    private final String url;
+    private final String url = "/auth/login";
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -56,10 +59,6 @@ public class UsernamePasswordAuthenticationTest {
 
     @Autowired
     private MockMvc mockMvc;
-
-    UsernamePasswordAuthenticationTest() {
-        this.url = "/auth/login";
-    }
 
     @Test
     @DisplayName("올바른 이메일와 비밀번호로 액세스 토큰이 발급 가능해야 한다.")
@@ -78,7 +77,7 @@ public class UsernamePasswordAuthenticationTest {
 
         // when
         ResultActions result = this.mockMvc.perform(
-                post(this.url).content(
+                post(url).content(
                                 this.objectMapper.writeValueAsString(authRequest))
                         .contentType(MediaType.APPLICATION_JSON));
 
@@ -152,7 +151,7 @@ public class UsernamePasswordAuthenticationTest {
                 .build();
 
         // when
-        ResultActions result = this.mockMvc.perform(post(this.url)
+        ResultActions result = this.mockMvc.perform(post(url)
                 .content(this.objectMapper.writeValueAsString(authRequest))
                 .contentType(MediaType.APPLICATION_JSON));
 
@@ -172,17 +171,19 @@ public class UsernamePasswordAuthenticationTest {
                 )));
     }
 
-
     private void createMember(String username, String nickname, String password) {
         String encodedPassword = passwordEncoder.encode(password);
 
-        memberRepository.save(Member.builder()
+        Member member = Member.builder()
                 .username(username)
                 .nickname(nickname)
                 .password(encodedPassword)
                 .isActive(true)
                 .marketingAgreedAt(LocalDateTime.now())
-                .build()
-        );
+                .build();
+
+        member.addRole(RoleType.USER);
+
+        memberRepository.save(member);
     }
 }
