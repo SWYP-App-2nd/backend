@@ -5,12 +5,17 @@ import java.util.List;
 import java.util.Map;
 import kr.swyp.backend.authentication.filter.CustomUsernamePasswordAuthenticationFilter;
 import kr.swyp.backend.authentication.filter.JwtAuthenticationFilter;
+import kr.swyp.backend.authentication.filter.RefreshTokenAuthenticationFilter;
 import kr.swyp.backend.authentication.handler.CustomAccessDeniedHandler;
 import kr.swyp.backend.authentication.handler.CustomAuthenticationEntryPoint;
+import kr.swyp.backend.authentication.handler.RefreshTokenAuthenticationFailureHandler;
+import kr.swyp.backend.authentication.handler.RefreshTokenAuthenticationSuccessHandler;
 import kr.swyp.backend.authentication.handler.UsernamePasswordAuthenticationFailureHandler;
 import kr.swyp.backend.authentication.handler.UsernamePasswordAuthenticationSuccessHandler;
+import kr.swyp.backend.authentication.provider.RefreshTokenAuthenticationProvider;
 import kr.swyp.backend.authentication.provider.TokenProvider;
 import kr.swyp.backend.authentication.provider.UsernamePasswordAuthenticationProvider;
+import kr.swyp.backend.authentication.service.RefreshTokenService;
 import kr.swyp.backend.member.service.MemberDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
@@ -43,6 +48,7 @@ public class SecurityConfig {
     private final TokenProvider tokenProvider;
     private final MemberDetailsService memberDetailsService;
     private final HandlerExceptionResolver handlerExceptionResolver;
+    private final RefreshTokenService refreshTokenService;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -69,14 +75,16 @@ public class SecurityConfig {
                 .addFilterBefore(usernamePasswordAuthenticationFilter(),
                         UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(jwtAuthenticationFilter(),
-                        CustomUsernamePasswordAuthenticationFilter.class);
+                        CustomUsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(refreshTokenAuthenticationFilter(),
+                        JwtAuthenticationFilter.class);
         return http.build();
     }
 
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
         return new JwtAuthenticationFilter(tokenProvider);
     }
-    
+
     @Bean
     public CustomUsernamePasswordAuthenticationFilter usernamePasswordAuthenticationFilter() {
         var filter = new CustomUsernamePasswordAuthenticationFilter(authenticationManager(),
@@ -88,11 +96,21 @@ public class SecurityConfig {
         return filter;
     }
 
+    public RefreshTokenAuthenticationFilter refreshTokenAuthenticationFilter() {
+        var filter = new RefreshTokenAuthenticationFilter(authenticationManager(), objectMapper);
+        filter.setAuthenticationSuccessHandler(
+                new RefreshTokenAuthenticationSuccessHandler(tokenProvider));
+        filter.setAuthenticationFailureHandler(
+                new RefreshTokenAuthenticationFailureHandler(handlerExceptionResolver));
+        return filter;
+    }
+
     @Bean
     public AuthenticationManager authenticationManager() {
         List<AuthenticationProvider> providerList = List.of(
                 new UsernamePasswordAuthenticationProvider(memberDetailsService,
-                        passwordEncoder()));
+                        passwordEncoder()),
+                new RefreshTokenAuthenticationProvider(refreshTokenService));
         return new ProviderManager(providerList);
     }
 

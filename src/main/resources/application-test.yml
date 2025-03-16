@@ -24,4 +24,5 @@ spring:
 swyp:
   jwt:
     secret: fJm76UJ3g8JL5P9tM3vUZbpuNDKVwGD8RQeMbwu2T15iZpvTM0LQCqERiXqK4Xc0
-    access-token-validity-in-seconds: 86400
+    access-token-validity-in-seconds: 86400 # 1일
+    refresh-token-validity-in-days: 7 # 7일

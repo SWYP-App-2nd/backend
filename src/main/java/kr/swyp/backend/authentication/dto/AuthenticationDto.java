@@ -1,6 +1,7 @@
 package kr.swyp.backend.authentication.dto;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,6 +30,7 @@ public class AuthenticationDto {
     @AllArgsConstructor
     public static class RefreshTokenAuthenticationRequest {
 
+        @NotNull(message = "리프레시 토큰은 필수 입니다.")
         private String refreshToken;
     }
 

@@ -1,4 +1,4 @@
-package kr.swyp.backend.config;
+package kr.swyp.backend.common.config;
 
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
