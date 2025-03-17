@@ -12,15 +12,13 @@ services:
       - mysql:/var/lib/mysql
   redis:
     container_name: redis
-    image: bitnami/redis:7.0.15 # NCP가 지원하는 Redis가 7.0.15임.
+    image: bitnami/redis:7.4.2
     ports:
       - "16697:6379"
     environment:
       - ALLOW_EMPTY_PASSWORD=no
       - REDIS_PASSWORD=password
       - REDIS_PORT_NUMBER=6379
-      - REDIS_AOF_ENABLED=no  # AOF 하드 쓰기 비활성화
-      - REDIS_IO_THREADS=4  #IO 멀티쓰레드
       - REDIS_IO_THREADS_DO_READS=yes
 
 volumes:
