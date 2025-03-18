@@ -15,5 +15,6 @@ public class AuthException extends CommonException {
         TOKEN_ERROR,
         PERMISSION_DENIED,
         TOKEN_RENEW_FAILED,
+        OAUTH_ERROR,
     }
 }
