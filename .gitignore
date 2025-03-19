@@ -38,3 +38,6 @@ out/
 
 ### docs ###
 src/main/resources/static/docs/
+
+### OAuth2 ###
+src/main/resources/application-oauth.yml

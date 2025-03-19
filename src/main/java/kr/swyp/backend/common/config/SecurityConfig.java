@@ -8,6 +8,8 @@ import kr.swyp.backend.authentication.filter.JwtAuthenticationFilter;
 import kr.swyp.backend.authentication.filter.RefreshTokenAuthenticationFilter;
 import kr.swyp.backend.authentication.handler.CustomAccessDeniedHandler;
 import kr.swyp.backend.authentication.handler.CustomAuthenticationEntryPoint;
+import kr.swyp.backend.authentication.handler.Oauth2AuthenticationFailureHandler;
+import kr.swyp.backend.authentication.handler.Oauth2AuthenticationSuccessHandler;
 import kr.swyp.backend.authentication.handler.RefreshTokenAuthenticationFailureHandler;
 import kr.swyp.backend.authentication.handler.RefreshTokenAuthenticationSuccessHandler;
 import kr.swyp.backend.authentication.handler.UsernamePasswordAuthenticationFailureHandler;
@@ -15,6 +17,7 @@ import kr.swyp.backend.authentication.handler.UsernamePasswordAuthenticationSucc
 import kr.swyp.backend.authentication.provider.RefreshTokenAuthenticationProvider;
 import kr.swyp.backend.authentication.provider.TokenProvider;
 import kr.swyp.backend.authentication.provider.UsernamePasswordAuthenticationProvider;
+import kr.swyp.backend.authentication.service.CustomOauth2UserService;
 import kr.swyp.backend.authentication.service.RefreshTokenService;
 import kr.swyp.backend.member.service.MemberDetailsService;
 import lombok.RequiredArgsConstructor;
@@ -49,6 +52,7 @@ public class SecurityConfig {
     private final MemberDetailsService memberDetailsService;
     private final HandlerExceptionResolver handlerExceptionResolver;
     private final RefreshTokenService refreshTokenService;
+    private final CustomOauth2UserService customOauth2UserService;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -66,12 +70,17 @@ public class SecurityConfig {
                 .sessionManagement(configurer -> configurer
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
+                .oauth2Login(oauth2 ->
+                        oauth2.userInfoEndpoint(userInfo ->
+                                        userInfo.userService(customOauth2UserService))
+                                .successHandler(oauth2AuthenticationSuccessHandler())
+                                .failureHandler(oauth2AuthenticationFailureHandler()))
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/oauth2/**").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/error/**").permitAll()
                         .anyRequest().authenticated())
-
                 .addFilterBefore(usernamePasswordAuthenticationFilter(),
                         UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(jwtAuthenticationFilter(),
@@ -83,6 +92,14 @@ public class SecurityConfig {
 
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
         return new JwtAuthenticationFilter(tokenProvider);
+    }
+
+    public Oauth2AuthenticationFailureHandler oauth2AuthenticationFailureHandler() {
+        return new Oauth2AuthenticationFailureHandler(handlerExceptionResolver);
+    }
+
+    public Oauth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler() {
+        return new Oauth2AuthenticationSuccessHandler(tokenProvider);
     }
 
     @Bean
