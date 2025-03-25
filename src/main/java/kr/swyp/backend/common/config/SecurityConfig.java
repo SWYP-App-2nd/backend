@@ -6,19 +6,21 @@ import java.util.Map;
 import kr.swyp.backend.authentication.filter.CustomUsernamePasswordAuthenticationFilter;
 import kr.swyp.backend.authentication.filter.JwtAuthenticationFilter;
 import kr.swyp.backend.authentication.filter.RefreshTokenAuthenticationFilter;
+import kr.swyp.backend.authentication.filter.SocialLoginAuthenticationFilter;
 import kr.swyp.backend.authentication.handler.CustomAccessDeniedHandler;
 import kr.swyp.backend.authentication.handler.CustomAuthenticationEntryPoint;
-import kr.swyp.backend.authentication.handler.Oauth2AuthenticationFailureHandler;
-import kr.swyp.backend.authentication.handler.Oauth2AuthenticationSuccessHandler;
 import kr.swyp.backend.authentication.handler.RefreshTokenAuthenticationFailureHandler;
 import kr.swyp.backend.authentication.handler.RefreshTokenAuthenticationSuccessHandler;
+import kr.swyp.backend.authentication.handler.SocialLoginAuthenticationFailureHandler;
+import kr.swyp.backend.authentication.handler.SocialLoginAuthenticationSuccessHandler;
 import kr.swyp.backend.authentication.handler.UsernamePasswordAuthenticationFailureHandler;
 import kr.swyp.backend.authentication.handler.UsernamePasswordAuthenticationSuccessHandler;
 import kr.swyp.backend.authentication.provider.RefreshTokenAuthenticationProvider;
+import kr.swyp.backend.authentication.provider.SocialLoginAuthenticationProvider;
 import kr.swyp.backend.authentication.provider.TokenProvider;
 import kr.swyp.backend.authentication.provider.UsernamePasswordAuthenticationProvider;
-import kr.swyp.backend.authentication.service.CustomOauth2UserService;
 import kr.swyp.backend.authentication.service.RefreshTokenService;
+import kr.swyp.backend.authentication.service.SocialLoginService;
 import kr.swyp.backend.member.service.MemberDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
@@ -52,7 +54,7 @@ public class SecurityConfig {
     private final MemberDetailsService memberDetailsService;
     private final HandlerExceptionResolver handlerExceptionResolver;
     private final RefreshTokenService refreshTokenService;
-    private final CustomOauth2UserService customOauth2UserService;
+    private final SocialLoginService socialLoginService;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -70,23 +72,21 @@ public class SecurityConfig {
                 .sessionManagement(configurer -> configurer
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                .oauth2Login(oauth2 ->
-                        oauth2.userInfoEndpoint(userInfo ->
-                                        userInfo.userService(customOauth2UserService))
-                                .successHandler(oauth2AuthenticationSuccessHandler())
-                                .failureHandler(oauth2AuthenticationFailureHandler()))
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/oauth2/**").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/error/**").permitAll()
                         .anyRequest().authenticated())
+
                 .addFilterBefore(usernamePasswordAuthenticationFilter(),
                         UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(jwtAuthenticationFilter(),
                         CustomUsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(refreshTokenAuthenticationFilter(),
-                        JwtAuthenticationFilter.class);
+                        JwtAuthenticationFilter.class)
+                .addFilterBefore(socialLoginAuthenticationFilter(),
+                        RefreshTokenAuthenticationFilter.class);
         return http.build();
     }
 
@@ -94,12 +94,12 @@ public class SecurityConfig {
         return new JwtAuthenticationFilter(tokenProvider);
     }
 
-    public Oauth2AuthenticationFailureHandler oauth2AuthenticationFailureHandler() {
-        return new Oauth2AuthenticationFailureHandler(handlerExceptionResolver);
+    public SocialLoginAuthenticationFailureHandler socialLoginAuthenticationFailureHandler() {
+        return new SocialLoginAuthenticationFailureHandler(handlerExceptionResolver);
     }
 
-    public Oauth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler() {
-        return new Oauth2AuthenticationSuccessHandler(tokenProvider);
+    public SocialLoginAuthenticationSuccessHandler socialLoginAuthenticationSuccessHandler() {
+        return new SocialLoginAuthenticationSuccessHandler(tokenProvider);
     }
 
     @Bean
@@ -122,12 +122,20 @@ public class SecurityConfig {
         return filter;
     }
 
+    public SocialLoginAuthenticationFilter socialLoginAuthenticationFilter() {
+        var filter = new SocialLoginAuthenticationFilter(authenticationManager(), objectMapper);
+        filter.setAuthenticationSuccessHandler(socialLoginAuthenticationSuccessHandler());
+        filter.setAuthenticationFailureHandler(socialLoginAuthenticationFailureHandler());
+        return filter;
+    }
+
     @Bean
     public AuthenticationManager authenticationManager() {
         List<AuthenticationProvider> providerList = List.of(
                 new UsernamePasswordAuthenticationProvider(memberDetailsService,
                         passwordEncoder()),
-                new RefreshTokenAuthenticationProvider(refreshTokenService));
+                new RefreshTokenAuthenticationProvider(refreshTokenService),
+                new SocialLoginAuthenticationProvider(socialLoginService));
         return new ProviderManager(providerList);
     }
 

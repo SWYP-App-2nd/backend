@@ -1,6 +1,6 @@
 package kr.swyp.backend.member.enums;
 
-public enum Oauth2ProviderType {
+public enum SocialLoginProviderType {
     KAKAO,
     APPLE,
 }

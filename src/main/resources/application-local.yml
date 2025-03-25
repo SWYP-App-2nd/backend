@@ -20,9 +20,6 @@ spring:
       host: localhost
       password: password
       port: 16697
-  config:
-    import:
-      - classpath:/application-oauth.yml
 
 swyp:
   jwt:

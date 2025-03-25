@@ -20,7 +20,6 @@ jobs:
         run: |
           mkdir -p src/main/resources
           echo "${{ secrets.DEV_APPLICATION_YML }}" | base64 --decode > src/main/resources/application-dev.yml
-          echo "${{ secrets.OAUTH_APPLICATION_YML }}" | base64 --decode > src/main/resources/application-oauth.yml
           find src
           rm src/main/resources/application-local.yml
           rm src/main/resources/application-test.yml

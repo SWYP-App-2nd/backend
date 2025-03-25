@@ -13,7 +13,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import kr.swyp.backend.common.domain.BaseEntity;
-import kr.swyp.backend.member.enums.Oauth2ProviderType;
+import kr.swyp.backend.member.enums.SocialLoginProviderType;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,8 +26,8 @@ import org.hibernate.annotations.Comment;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "MEMBER_OAUTH_INFO")
-public class MemberOauthInfo extends BaseEntity {
+@Table(name = "MEMBER_SOCIAL_LOGIN_INFO")
+public class MemberSocialLoginInfo extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,7 +43,7 @@ public class MemberOauthInfo extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "PROVIDER_TYPE")
     @Comment("소셜 로그인 서비스 제공자")
-    private Oauth2ProviderType providerType;
+    private SocialLoginProviderType providerType;
 
     @NotNull
     @Column(name = "PROVIDER_ID")
