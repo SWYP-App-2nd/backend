@@ -17,5 +17,4 @@ public class UsernamePasswordAuthenticationProvider extends DaoAuthenticationPro
     public boolean supports(Class<?> authentication) {
         return authentication.equals(UsernamePasswordAuthenticationToken.class);
     }
-
 }

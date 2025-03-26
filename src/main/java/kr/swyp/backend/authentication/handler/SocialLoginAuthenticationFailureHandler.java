@@ -16,7 +16,7 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 
 @Slf4j
 @RequiredArgsConstructor
-public class Oauth2AuthenticationFailureHandler implements AuthenticationFailureHandler {
+public class SocialLoginAuthenticationFailureHandler implements AuthenticationFailureHandler {
 
     private final HandlerExceptionResolver handlerExceptionResolver;
 
