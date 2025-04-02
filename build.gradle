@@ -80,6 +80,11 @@ tasks.withType(GenerateSwaggerUI).configureEach {
     }
 }
 
+def isWindows = System.getProperty("os.name").toLowerCase().contains("win")
+def docsOutputPath = isWindows
+        ? "$buildDir/generated-snippets/openapi3"
+        : "build/resources/main/static/docs"
+
 openapi3 {
     server = "localhost:8080"
     title = "스위프 앱 1기 2팀 API"
@@ -87,5 +92,7 @@ openapi3 {
     version = "0.0.1"
     outputFileNamePrefix = 'api'
     format = 'json'
-    outputDirectory = 'build/resources/main/static/docs'
+
+    // os에 따라 분기
+    outputDirectory = docsOutputPath
 }
