@@ -5,12 +5,12 @@ import java.util.Set;
 import kr.swyp.backend.member.enums.SocialLoginProviderType;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 
-public class SocialLoginAuthenticationToken extends AbstractAuthenticationToken {
+public class KakaoSocialLoginAuthenticationToken extends AbstractAuthenticationToken {
 
     private final String accessToken;
     private final SocialLoginProviderType providerType;
 
-    public SocialLoginAuthenticationToken(String accessToken,
+    public KakaoSocialLoginAuthenticationToken(String accessToken,
             SocialLoginProviderType providerType) {
         super(Set.of());
         this.accessToken = accessToken;

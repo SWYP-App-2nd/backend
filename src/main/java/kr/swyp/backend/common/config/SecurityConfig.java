@@ -15,8 +15,9 @@ import kr.swyp.backend.authentication.handler.SocialLoginAuthenticationFailureHa
 import kr.swyp.backend.authentication.handler.SocialLoginAuthenticationSuccessHandler;
 import kr.swyp.backend.authentication.handler.UsernamePasswordAuthenticationFailureHandler;
 import kr.swyp.backend.authentication.handler.UsernamePasswordAuthenticationSuccessHandler;
+import kr.swyp.backend.authentication.provider.AppleSocialLoginAuthenticationProvider;
+import kr.swyp.backend.authentication.provider.KakaoSocialLoginAuthenticationProvider;
 import kr.swyp.backend.authentication.provider.RefreshTokenAuthenticationProvider;
-import kr.swyp.backend.authentication.provider.SocialLoginAuthenticationProvider;
 import kr.swyp.backend.authentication.provider.TokenProvider;
 import kr.swyp.backend.authentication.provider.UsernamePasswordAuthenticationProvider;
 import kr.swyp.backend.authentication.service.RefreshTokenService;
@@ -135,7 +136,8 @@ public class SecurityConfig {
                 new UsernamePasswordAuthenticationProvider(memberDetailsService,
                         passwordEncoder()),
                 new RefreshTokenAuthenticationProvider(refreshTokenService),
-                new SocialLoginAuthenticationProvider(socialLoginService));
+                new KakaoSocialLoginAuthenticationProvider(socialLoginService),
+                new AppleSocialLoginAuthenticationProvider(socialLoginService));
         return new ProviderManager(providerList);
     }
 

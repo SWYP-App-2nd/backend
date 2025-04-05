@@ -14,11 +14,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
+import kr.swyp.backend.authentication.dto.SocialLoginDto.ApplePublicKeyResponse;
+import kr.swyp.backend.authentication.dto.SocialLoginDto.ApplePublicKeyResponse.ApplePublicKey;
+import kr.swyp.backend.authentication.dto.SocialLoginDto.AppleSocialLoginRequest;
+import kr.swyp.backend.authentication.dto.SocialLoginDto.AppleTokenResponse;
+import kr.swyp.backend.authentication.dto.SocialLoginDto.AppleTokenVerificationResult;
+import kr.swyp.backend.authentication.dto.SocialLoginDto.AppleUserInfo;
+import kr.swyp.backend.authentication.dto.SocialLoginDto.KakaoSocialLoginRequest;
 import kr.swyp.backend.authentication.dto.SocialLoginDto.KakaoSocialLoginResponse;
 import kr.swyp.backend.authentication.dto.SocialLoginDto.KakaoSocialLoginResponse.KakaoAccount;
 import kr.swyp.backend.authentication.dto.SocialLoginDto.KakaoSocialLoginResponse.KakaoAccount.Profile;
-import kr.swyp.backend.authentication.dto.SocialLoginDto.SocialLoginRequest;
+import kr.swyp.backend.authentication.service.AppleClientService;
 import kr.swyp.backend.authentication.service.KakaoClientServiceImpl;
+import kr.swyp.backend.authentication.utils.AppleLoginUtil;
 import kr.swyp.backend.common.desciptor.ErrorDescriptor;
 import kr.swyp.backend.member.enums.SocialLoginProviderType;
 import kr.swyp.backend.member.repository.MemberRepository;
@@ -57,6 +66,12 @@ public class SocialLoginAuthenticationTest {
     @MockitoBean
     private KakaoClientServiceImpl kakaoClientService;
 
+    @MockitoBean
+    private AppleClientService appleClientService;
+
+    @MockitoBean
+    private AppleLoginUtil appleLoginUtil;
+
     @Autowired
     private MemberRepository memberRepository;
 
@@ -66,7 +81,6 @@ public class SocialLoginAuthenticationTest {
     @Autowired
     private MockMvc mockMvc;
 
-
     @BeforeEach
     void setUp() throws JsonProcessingException {
         when(kakaoClientService.getAccessTokenInfo(Mockito.anyString())).thenReturn(
@@ -75,8 +89,44 @@ public class SocialLoginAuthenticationTest {
                         .kakaoAccount(KakaoAccount.builder()
                                 .profile(Profile.builder()
                                         .nickname("test")
+                                        .email("test@test.com")
                                         .build())
                                 .build())
+                        .build());
+
+        when(appleClientService.getAuthKey()).thenReturn(ApplePublicKeyResponse.builder()
+                .keys(List.of(
+                        ApplePublicKey.builder()
+                                .alg("test")
+                                .use("test")
+                                .kid("test")
+                                .kty("test")
+                                .n("test")
+                                .e("test")
+                                .build()))
+                .build());
+
+        when(appleClientService.getTokenResponse(Mockito.anyString(), Mockito.anyString(),
+                Mockito.anyString(), Mockito.anyString())).thenReturn(
+                AppleTokenResponse.builder()
+                        .accessToken("test")
+                        .tokenType("test")
+                        .expiresIn(1L)
+                        .refreshToken("test")
+                        .idToken("test")
+                        .build());
+
+        when(appleLoginUtil.verifyAppleToken(Mockito.anyString())).thenReturn(
+                AppleTokenVerificationResult.builder()
+                        .email("test@test.com")
+                        .valid(true)
+                        .subject("test")
+                        .build());
+
+        when(appleLoginUtil.getUserInfoFromAuthCode(Mockito.anyString())).thenReturn(
+                AppleUserInfo.builder()
+                        .email("test@test.com")
+                        .emailVerified(true)
                         .build());
     }
 
@@ -86,7 +136,7 @@ public class SocialLoginAuthenticationTest {
         // given
         String accessToken = "test";
 
-        var request = SocialLoginRequest.builder()
+        var request = KakaoSocialLoginRequest.builder()
                 .accessToken(accessToken)
                 .providerType(SocialLoginProviderType.KAKAO)
                 .build();
@@ -103,7 +153,7 @@ public class SocialLoginAuthenticationTest {
                 .andReturn();
 
         // docs
-        result.andDo(document("소셜 로그인 성공",
+        result.andDo(document("카카오 소셜 로그인 성공",
                 "소셜 로그인 AccessToken과 Provider로 토큰을 발급한다.",
                 "소셜 로그인 AccessToken과 Provider로 토큰을 발급",
                 false,
@@ -111,7 +161,44 @@ public class SocialLoginAuthenticationTest {
                 preprocessRequest(prettyPrint()),
                 preprocessResponse(prettyPrint()),
                 requestFields(
-                        fieldWithPath("accessToken").description("소셜 로그인 Access Token"),
+                        fieldWithPath("accessToken").description("카카오 소셜 로그인 Access Token"),
+                        fieldWithPath("providerType").description("소셜 로그인 제공자 타입")
+                ),
+                responseFields(authenticationResponseDescriptor)));
+    }
+
+    @Test
+    @DisplayName("애플 로그인이 성공해야 한다.")
+    void 애플_로그인이_성공해야_한다() throws Exception {
+        // given
+        String identityToken = "test";
+        String authorizationCode = "test";
+
+        var request = AppleSocialLoginRequest.builder()
+                .identityToken(identityToken)
+                .authorizationCode(authorizationCode)
+                .providerType(SocialLoginProviderType.APPLE)
+                .build();
+
+        // when
+        ResultActions result = this.mockMvc.perform(
+                post(url).content(
+                                this.objectMapper.writeValueAsString(request))
+                        .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").exists())
+                .andReturn();
+
+        // docs
+        result.andDo(document("애플 소셜 로그인 성공",
+                preprocessRequest(prettyPrint()),
+                preprocessResponse(prettyPrint()),
+                requestFields(
+                        fieldWithPath("identityToken").description("애플 소셜 로그인 identityToken"),
+                        fieldWithPath("authorizationCode").description(
+                                "애플 소셜 로그인 authorizationCode"),
                         fieldWithPath("providerType").description("소셜 로그인 제공자 타입")
                 ),
                 responseFields(authenticationResponseDescriptor)));
