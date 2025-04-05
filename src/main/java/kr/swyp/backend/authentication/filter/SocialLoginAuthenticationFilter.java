@@ -6,8 +6,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import kr.swyp.backend.authentication.dto.SocialLoginAuthenticationToken;
-import kr.swyp.backend.authentication.dto.SocialLoginDto.SocialLoginRequest;
+import kr.swyp.backend.authentication.dto.AppleSocialLoginAuthenticationToken;
+import kr.swyp.backend.authentication.dto.KakaoSocialLoginAuthenticationToken;
+import kr.swyp.backend.authentication.dto.SocialLoginDto.AbstractSocialLoginRequest;
+import kr.swyp.backend.authentication.dto.SocialLoginDto.AppleSocialLoginRequest;
+import kr.swyp.backend.authentication.dto.SocialLoginDto.KakaoSocialLoginRequest;
+import kr.swyp.backend.member.enums.SocialLoginProviderType;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationServiceException;
@@ -37,29 +42,47 @@ public class SocialLoginAuthenticationFilter extends AbstractAuthenticationProce
                     "Authentication method not supported: " + request.getMethod());
         }
 
-        SocialLoginRequest token = this.obtainSocialLoginToken(request);
-        var authRequest = new SocialLoginAuthenticationToken(token.getAccessToken(),
-                token.getProviderType());
+        AbstractAuthenticationToken authRequest;
+        AbstractSocialLoginRequest token = this.obtainSocialLoginToken(request);
+        if (token.getProviderType().equals(SocialLoginProviderType.KAKAO)) {
+            KakaoSocialLoginRequest kakaoToken = (KakaoSocialLoginRequest) token;
+            authRequest = new KakaoSocialLoginAuthenticationToken(kakaoToken.getAccessToken(),
+                    kakaoToken.getProviderType());
+        } else if (token.getProviderType().equals(SocialLoginProviderType.APPLE)) {
+            AppleSocialLoginRequest appleToken = (AppleSocialLoginRequest) token;
+            authRequest = new AppleSocialLoginAuthenticationToken(appleToken.getIdentityToken(),
+                    appleToken.getAuthorizationCode(), appleToken.getProviderType());
+        } else {
+            throw new AuthenticationServiceException("지원하지 않는 소셜 로그인입니다.");
+        }
 
         setDetails(request, authRequest);
         return this.getAuthenticationManager().authenticate(authRequest);
     }
 
     protected void setDetails(HttpServletRequest request,
-            SocialLoginAuthenticationToken authRequest) {
+            AbstractAuthenticationToken authRequest) {
         authRequest.setDetails(authenticationDetailsSource.buildDetails(request));
     }
 
-    private SocialLoginRequest obtainSocialLoginToken(HttpServletRequest request) {
+    private AbstractSocialLoginRequest obtainSocialLoginToken(HttpServletRequest request) {
         try {
             String messageBody = StreamUtils.copyToString(request.getInputStream(),
                     StandardCharsets.UTF_8);
 
-            return objectMapper.readValue(
-                    messageBody, SocialLoginRequest.class);
+            // Jackson이 자동으로 올바른 하위 타입으로 변환
+            AbstractSocialLoginRequest loginRequest = objectMapper.readValue(messageBody,
+                    AbstractSocialLoginRequest.class);
+
+            // providerType null 확인
+            if (loginRequest.getProviderType() == null) {
+                throw new AuthenticationCredentialsNotFoundException("소셜 로그인 제공자 타입이 누락되었습니다.");
+            }
+
+            return loginRequest;
         } catch (IOException e) {
             throw new AuthenticationCredentialsNotFoundException(
-                    "요청 데이터가 올바르지 않아 소셜 로그인에 실패했습니다.");
+                    "요청 데이터를 파싱할 수 없습니다: " + e.getMessage(), e);
         }
     }
 }

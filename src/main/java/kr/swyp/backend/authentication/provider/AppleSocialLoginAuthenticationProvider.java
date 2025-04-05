@@ -1,11 +1,10 @@
 package kr.swyp.backend.authentication.provider;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import kr.swyp.backend.authentication.dto.AppleSocialLoginAuthenticationToken;
 import kr.swyp.backend.authentication.dto.MemberInfo;
-import kr.swyp.backend.authentication.dto.SocialLoginAuthenticationToken;
 import kr.swyp.backend.authentication.service.SocialLoginService;
 import kr.swyp.backend.member.dto.MemberDetails;
 import kr.swyp.backend.member.enums.RoleType;
@@ -20,7 +19,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @RequiredArgsConstructor
-public class SocialLoginAuthenticationProvider implements AuthenticationProvider {
+public class AppleSocialLoginAuthenticationProvider implements AuthenticationProvider {
 
     private final SocialLoginService socialLoginService;
 
@@ -30,16 +29,18 @@ public class SocialLoginAuthenticationProvider implements AuthenticationProvider
         Map<String, Object> socialLoginInfoMap =
                 (Map<String, Object>) authentication.getPrincipal();
         try {
-            MemberInfo memberInfo = socialLoginService.getMemberInfoBySocialIdAndProviderType(
-                    (String) socialLoginInfoMap.get("accessToken"),
-                    (SocialLoginProviderType) socialLoginInfoMap.get("providerType"));
+            MemberInfo memberInfo = socialLoginService
+                    .getMemberInfoByIdentityTokenAndAuthorizationCodeAndProviderType(
+                            (String) socialLoginInfoMap.get("identityToken"),
+                            (String) socialLoginInfoMap.get("authorizationCode"),
+                            (SocialLoginProviderType) socialLoginInfoMap.get("providerType"));
 
             MemberDetails memberDetails = new MemberDetails(memberInfo.getMemberId(),
                     memberInfo.getUsername(), "", getAuthorities(memberInfo.getRoleType()));
 
             return new UsernamePasswordAuthenticationToken(memberDetails, "",
                     memberDetails.getAuthorities());
-        } catch (IllegalArgumentException | JsonProcessingException e) {
+        } catch (IllegalArgumentException e) {
             throw new BadCredentialsException(e.getMessage());
         }
     }
@@ -50,6 +51,6 @@ public class SocialLoginAuthenticationProvider implements AuthenticationProvider
 
     @Override
     public boolean supports(Class<?> authentication) {
-        return SocialLoginAuthenticationToken.class.isAssignableFrom(authentication);
+        return AppleSocialLoginAuthenticationToken.class.isAssignableFrom(authentication);
     }
 }
