@@ -43,18 +43,22 @@ public class Member extends BaseEntity implements UserDetails {
     private UUID memberId;
 
     @NotNull
-    @Comment("사용자 로그인 ID")
-    @Column(name = "USERNAME", unique = true)
+    @Comment("사용자 로그인 이메일")
+    @Column(name = "USER_EMAIL", unique = true)
     private String username;
 
-    @Comment("사용자 닉네임")
-    @Column(name = "NICKNAME")
+    @Comment("사용자 이름")
+    @Column(name = "NAME")
     private String nickname;
 
     @NotNull
     @Comment("사용자 로그인 PW")
     @Column(name = "PASSWORD")
     private String password;
+
+    @Comment("프로필 이미지 url")
+    @Column(name = "IMAGE_URL")
+    private String imageUrl;
 
     @NotNull
     @Comment("활성화 여부")
