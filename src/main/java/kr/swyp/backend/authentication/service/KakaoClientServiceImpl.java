@@ -18,7 +18,7 @@ public class KakaoClientServiceImpl implements KakaoClientService {
     @Override
     public KakaoSocialLoginResponse getAccessTokenInfo(String accessToken)
             throws JsonProcessingException {
-        List<String> kakaoPropertyKeyList = List.of("kakao_account.profile");
+        List<String> kakaoPropertyKeyList = List.of("kakao_account.profile", "kakao_account.email");
         return kakaoOauthClient.getAccessTokenInfo("Bearer " + accessToken,
                 objectMapper.writeValueAsString(kakaoPropertyKeyList));
     }

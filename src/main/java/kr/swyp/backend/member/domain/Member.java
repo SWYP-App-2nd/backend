@@ -44,12 +44,12 @@ public class Member extends BaseEntity implements UserDetails {
 
     @NotNull
     @Comment("사용자 로그인 이메일")
-    @Column(name = "EMAIL", unique = true)
-    private String email;
+    @Column(name = "USERNAME", unique = true)
+    private String username;
 
     @Comment("사용자 이름")
-    @Column(name = "USERNAME")
-    private String username;
+    @Column(name = "NICKNAME")
+    private String nickname;
 
     @NotNull
     @Comment("사용자 로그인 PW")

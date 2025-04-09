@@ -77,6 +77,7 @@ public class SocialLoginDto {
         public static class KakaoAccount {
 
             private Profile profile;
+            private String email;
 
             @Getter
             @Builder
@@ -86,7 +87,6 @@ public class SocialLoginDto {
             public static class Profile {
 
                 private String nickname;
-                private String email;
             }
         }
     }
