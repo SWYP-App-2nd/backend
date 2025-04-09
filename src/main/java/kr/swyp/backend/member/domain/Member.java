@@ -43,11 +43,11 @@ public class Member extends BaseEntity implements UserDetails {
     private UUID memberId;
 
     @NotNull
-    @Comment("사용자 로그인 ID")
+    @Comment("사용자 로그인 이메일")
     @Column(name = "USERNAME", unique = true)
     private String username;
 
-    @Comment("사용자 닉네임")
+    @Comment("사용자 이름")
     @Column(name = "NICKNAME")
     private String nickname;
 
@@ -55,6 +55,10 @@ public class Member extends BaseEntity implements UserDetails {
     @Comment("사용자 로그인 PW")
     @Column(name = "PASSWORD")
     private String password;
+
+    @Comment("프로필 이미지 URL")
+    @Column(name = "IMAGE_URL")
+    private String imageUrl;
 
     @NotNull
     @Comment("활성화 여부")

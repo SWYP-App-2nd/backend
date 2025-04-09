@@ -51,8 +51,8 @@ public class SocialLoginServiceImpl implements SocialLoginService {
             }
 
             Member member = Member.builder()
-                    .username(response.getKakaoAccount().getProfile().getEmail())
-                    .nickname(response.getKakaoAccount().getProfile().getNickname())
+                    .username(response.getKakaoAccount().getEmail())
+                    .username(response.getKakaoAccount().getProfile().getNickname())
                     .password(" ")
                     .isActive(true)
                     .build();

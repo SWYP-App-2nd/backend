@@ -89,8 +89,8 @@ public class SocialLoginAuthenticationTest {
                         .kakaoAccount(KakaoAccount.builder()
                                 .profile(Profile.builder()
                                         .nickname("test")
-                                        .email("test@test.com")
                                         .build())
+                                .email("test@test.com")
                                 .build())
                         .build());
 
