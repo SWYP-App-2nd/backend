@@ -1,6 +1,7 @@
 package kr.swyp.backend.member.repository;
 
 import java.util.Optional;
+import kr.swyp.backend.member.domain.Member;
 import kr.swyp.backend.member.domain.MemberSocialLoginInfo;
 import kr.swyp.backend.member.enums.SocialLoginProviderType;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -12,4 +13,6 @@ public interface MemberSocialLoginInfoRepository extends
     @EntityGraph(attributePaths = {"member"})
     Optional<MemberSocialLoginInfo> findByProviderIdAndProviderType(
             String providerId, SocialLoginProviderType providerType);
+
+    Optional<MemberSocialLoginInfo> findByMember(Member member);
 }
