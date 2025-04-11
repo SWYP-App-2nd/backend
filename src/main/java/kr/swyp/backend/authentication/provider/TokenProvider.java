@@ -37,18 +37,18 @@ import org.springframework.util.StringUtils;
 public class TokenProvider {
 
     private final SecretKey secretKey;
-    private final long accessTokenValidityInSeconds;
+    private final long accessTokenValidityInMilliSeconds;
     private final ObjectMapper objectMapper;
     private final RefreshTokenService refreshTokenService;
 
     public TokenProvider(@Value("${swyp.jwt.secret}") String secretKey,
-            @Value("${swyp.jwt.access-token-validity-in-seconds}")
-            long accessTokenValidityInSeconds,
+            @Value("${swyp.jwt.access-token-validity-in-milli-seconds}")
+            long accessTokenValidityInMilliSeconds,
             ObjectMapper objectMapper,
             RefreshTokenService refreshTokenService) {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.secretKey = Keys.hmacShaKeyFor(keyBytes);
-        this.accessTokenValidityInSeconds = accessTokenValidityInSeconds;
+        this.accessTokenValidityInMilliSeconds = accessTokenValidityInMilliSeconds;
         this.objectMapper = objectMapper;
         this.refreshTokenService = refreshTokenService;
     }
@@ -113,7 +113,7 @@ public class TokenProvider {
         MemberDetails principal = (MemberDetails) authentication.getPrincipal();
 
         long now = (new Date()).getTime();
-        Date accessTokenExpiresIn = new Date(now + this.accessTokenValidityInSeconds);
+        Date accessTokenExpiresIn = new Date(now + this.accessTokenValidityInMilliSeconds);
 
         return Jwts.builder()
                 .subject(authentication.getName())
