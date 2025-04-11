@@ -93,7 +93,7 @@ def docsOutputPath = isWindows
         : "build/resources/main/static/docs"
 
 openapi3 {
-    server = "localhost:8080"
+    server = "https://dev.near.io.kr"
     title = "스위프 앱 1기 2팀 API"
     description = "이 문서에서는 API 문서를 제공합니다."
     version = "0.0.1"
