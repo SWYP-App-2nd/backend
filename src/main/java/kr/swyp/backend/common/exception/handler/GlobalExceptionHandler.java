@@ -32,7 +32,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<ErrorInfo> handleNoSuchElementException(
             NoSuchElementException e) {
-        return responseException("ELEMENT_NOT_FOUND", e.getMessage(), HttpStatus.BAD_REQUEST);
+        return responseException("ELEMENT_NOT_FOUND", e.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
