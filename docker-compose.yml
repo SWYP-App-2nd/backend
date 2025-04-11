@@ -20,6 +20,22 @@ services:
       - REDIS_PASSWORD=password
       - REDIS_PORT_NUMBER=6379
       - REDIS_IO_THREADS_DO_READS=yes
+  localstack:
+    container_name: localstack
+    image: localstack/localstack:latest
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3
+      - DEBUG=1
+      - DATA_DIR=/tmp/localstack/data
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=kr-standard
+    volumes:
+      - localstack:/var/lib/localstack
 
 volumes:
   mysql:
+  localstack:
