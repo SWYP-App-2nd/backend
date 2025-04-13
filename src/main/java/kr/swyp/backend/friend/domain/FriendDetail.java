@@ -1,4 +1,4 @@
-package kr.swyp.backend.member.domain;
+package kr.swyp.backend.friend.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -9,6 +9,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
+import java.time.LocalDate;
 import kr.swyp.backend.common.domain.BaseEntity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -22,19 +24,35 @@ import org.hibernate.annotations.Comment;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "MEMBER_CHECK_RATE")
-public class MemberCheckRate extends BaseEntity {
+@Table(name = "FRIEND_DETAIL")
+public class FriendDetail extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID")
     private Long id;
 
-    @Column(name = "CHECK_RATE")
-    @Comment("평균 챙김 체크율 (0~100%)")
-    private Integer checkRate;
-
+    @NotNull
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MEMBER_ID")
-    private Member member;
+    @JoinColumn(name = "FRIEND_ID")
+    @Comment("FRIEND 테이블 외래키")
+    private Friend friend;
+
+    @NotNull
+    @Column(name = "PHONE")
+    @Comment("전화번호")
+    private String phone;
+
+    @Column(name = "RELATION")
+    @Comment("관계 (예: 친구, 가족 등)")
+    private String relation;
+
+    @Column(name = "BIRTHDAY")
+    @Comment("생일")
+    private LocalDate birthday;
+
+    @Column(name = "MEMO")
+    @Comment("친구에 대한 메모")
+    private String memo;
+
 }

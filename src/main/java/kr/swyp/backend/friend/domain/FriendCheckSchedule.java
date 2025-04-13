@@ -1,4 +1,4 @@
-package kr.swyp.backend.member.domain;
+package kr.swyp.backend.friend.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -7,8 +7,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
+import java.time.LocalDate;
 import kr.swyp.backend.common.domain.BaseEntity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -22,19 +24,28 @@ import org.hibernate.annotations.Comment;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "MEMBER_CHECK_RATE")
-public class MemberCheckRate extends BaseEntity {
+@Table(name = "FRIEND_CHECK_SCHEDULE")
+public class FriendCheckSchedule extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID")
     private Long id;
 
-    @Column(name = "CHECK_RATE")
-    @Comment("평균 챙김 체크율 (0~100%)")
-    private Integer checkRate;
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "FRIEND_ID")
+    @Comment("FRIEND 테이블 외래키")
+    private Friend friend;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MEMBER_ID")
-    private Member member;
+    @NotNull
+    @Column(name = "SCHEDULE_DATE")
+    @Comment("챙겨야 할 날짜")
+    private LocalDate scheduleDate;
+
+    @Builder.Default
+    @Column(name = "IS_CHECKED")
+    @Comment("해당 날짜에 사용자가 체크했는지 여부")
+    private Boolean isChecked = false;
+
 }
