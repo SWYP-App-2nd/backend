@@ -19,7 +19,7 @@ import software.amazon.awssdk.annotations.NotNull;
 @Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "FILE")
 public class File extends BaseEntity {
 
