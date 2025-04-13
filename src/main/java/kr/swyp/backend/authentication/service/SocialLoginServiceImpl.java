@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+// TODO: 차후에 탈퇴한 회원이 소셜 로그인을 다시 시도할 경우, 회원가입이 안되는 문제 해결 필요
 @Service
 @RequiredArgsConstructor
 public class SocialLoginServiceImpl implements SocialLoginService {

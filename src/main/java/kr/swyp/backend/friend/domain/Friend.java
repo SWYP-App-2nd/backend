@@ -70,7 +70,7 @@ public class Friend extends BaseEntity {
     @OneToOne(mappedBy = "friend", cascade = CascadeType.ALL, orphanRemoval = true)
     private FriendDetail friendDetail;
 
+    @Builder.Default
     @OneToMany(mappedBy = "friend", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FriendCheckSchedule> checkSchedules = new ArrayList<>();
-
 }

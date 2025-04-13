@@ -15,4 +15,6 @@ public interface MemberSocialLoginInfoRepository extends
             String providerId, SocialLoginProviderType providerType);
 
     Optional<MemberSocialLoginInfo> findByMember(Member member);
+
+    void deleteByMember(Member member);
 }

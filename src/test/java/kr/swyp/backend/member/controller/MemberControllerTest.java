@@ -3,15 +3,18 @@ package kr.swyp.backend.member.controller;
 import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document;
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
 import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.delete;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
+import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.UUID;
@@ -21,6 +24,7 @@ import kr.swyp.backend.member.domain.Member;
 import kr.swyp.backend.member.domain.MemberNotificationSetting;
 import kr.swyp.backend.member.domain.MemberSocialLoginInfo;
 import kr.swyp.backend.member.dto.MemberDetails;
+import kr.swyp.backend.member.dto.MemberDto.MemberWithdrawRequest;
 import kr.swyp.backend.member.enums.RoleType;
 import kr.swyp.backend.member.enums.SocialLoginProviderType;
 import kr.swyp.backend.member.repository.MemberNotificationSettingRepository;
@@ -33,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -45,7 +50,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @AutoConfigureMockMvc
 @AutoConfigureRestDocs
 @Transactional
-class GetMemberInfoTest {
+class MemberControllerTest {
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String TOKEN_PREFIX = "Bearer ";
@@ -62,10 +67,13 @@ class GetMemberInfoTest {
             fieldWithPath("providerType").description("소셜 로그인 제공자")
     };
 
-    private final String url = "/member/me";
+    private final String url = "/member";
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Autowired
     private TokenProvider tokenProvider;
@@ -129,7 +137,7 @@ class GetMemberInfoTest {
     @DisplayName("올바른 회원은 회원 정보가 정상적으로 조회되어야 한다.")
     void 올바른_회원은_회원_정보가_정상적으로_조회되어야_한다() throws Exception {
         // when
-        ResultActions result = mockMvc.perform(get(url)
+        ResultActions result = mockMvc.perform(get(url + "/me")
                         .header(AUTHORIZATION_HEADER, TOKEN_PREFIX + accessToken))
                 .andExpect(status().isOk());
 
@@ -169,7 +177,7 @@ class GetMemberInfoTest {
                 ));
 
         // when
-        ResultActions result = mockMvc.perform(get(url)
+        ResultActions result = mockMvc.perform(get(url + "/me")
                 .header(AUTHORIZATION_HEADER, TOKEN_PREFIX + token));
 
         // then
@@ -186,5 +194,48 @@ class GetMemberInfoTest {
                                 headerWithName(AUTHORIZATION_HEADER).description("발급받은 JWT")),
                         responseFields(ErrorDescriptor.errorResponseFieldDescriptors)
                 ));
+    }
+
+    @Test
+    @DisplayName("회원탈퇴를 할 수 있어야 한다.")
+    void 회원탈퇴를_할_수_있어야_한다() throws Exception {
+        // given
+        String token = tokenProvider.generateAccessToken(
+                new UsernamePasswordAuthenticationToken(
+                        new MemberDetails(testMember.getMemberId(), testMember.getUsername(), "",
+                                List.of(new SimpleGrantedAuthority(RoleType.USER.getAuthority()))),
+                        null,
+                        List.of(new SimpleGrantedAuthority(RoleType.USER.getAuthority()))
+                ));
+
+        MemberWithdrawRequest request = MemberWithdrawRequest.builder()
+                .reasonType("test")
+                .customReason("test")
+                .build();
+
+        // when
+        ResultActions result = mockMvc.perform(delete(url + "/withdraw")
+                .content(objectMapper.writeValueAsString(request))
+                .contentType(MediaType.APPLICATION_JSON)
+                .header(AUTHORIZATION_HEADER, TOKEN_PREFIX + token));
+
+        // then
+        result.andExpect(status().isNoContent());
+
+        // docs
+        result.andDo(document("회원 탈퇴 성공",
+                "회원 탈퇴를 성공적으로 수행할 수 있다.",
+                "회원 탈퇴",
+                false,
+                false,
+                preprocessRequest(prettyPrint()),
+                preprocessResponse(prettyPrint()),
+                requestHeaders(
+                        headerWithName(AUTHORIZATION_HEADER).description("발급받은 JWT")),
+                requestFields(
+                        fieldWithPath("reasonType").description("탈퇴 사유"),
+                        fieldWithPath("customReason").description("탈퇴 사유 상세").optional()
+                )
+        ));
     }
 }
