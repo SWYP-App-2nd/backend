@@ -112,4 +112,8 @@ public class Member extends BaseEntity implements UserDetails {
                 .build();
         this.roles.add(role);
     }
+
+    public void updateWithdrawnAt() {
+        this.withdrawnAt = LocalDateTime.now();
+    }
 }

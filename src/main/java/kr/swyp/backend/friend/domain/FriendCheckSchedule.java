@@ -15,6 +15,7 @@ import kr.swyp.backend.common.domain.BaseEntity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
@@ -43,9 +44,8 @@ public class FriendCheckSchedule extends BaseEntity {
     @Comment("챙겨야 할 날짜")
     private LocalDate scheduleDate;
 
-    @Builder.Default
+    @Default
     @Column(name = "IS_CHECKED")
     @Comment("해당 날짜에 사용자가 체크했는지 여부")
     private Boolean isChecked = false;
-
 }

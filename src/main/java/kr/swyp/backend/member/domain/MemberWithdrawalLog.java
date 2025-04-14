@@ -42,5 +42,4 @@ public class MemberWithdrawalLog extends BaseEntity {
     @Column(name = "CUSTOM_REASON")
     @Comment("사용자 입력 사유 (선택형이 ETC인 경우)")
     private String customReason;
-
 }

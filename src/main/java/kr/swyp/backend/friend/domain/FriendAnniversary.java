@@ -30,18 +30,18 @@ public class FriendAnniversary extends BaseEntity {
     @Column(name = "ID")
     private Long id;
 
+    @NotNull
     @Column(name = "FRIEND_ID")
     @Comment("친구 ID")
-    @NotNull
     private UUID friendId;
 
+    @NotNull
     @Column(name = "TITLE")
     @Comment("기념일 이름 (예: 결혼기념일, 첫 만남)")
-    @NotNull
     private String title;
 
+    @NotNull
     @Column(name = "DATE")
     @Comment("기념일 날짜")
-    @NotNull
     private LocalDate date;
 }

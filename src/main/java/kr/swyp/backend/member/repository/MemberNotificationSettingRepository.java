@@ -9,4 +9,6 @@ public interface MemberNotificationSettingRepository extends
         JpaRepository<MemberNotificationSetting, Long> {
 
     Optional<MemberNotificationSetting> findByMemberId(UUID memberId);
+
+    void deleteByMemberId(UUID memberId);
 }

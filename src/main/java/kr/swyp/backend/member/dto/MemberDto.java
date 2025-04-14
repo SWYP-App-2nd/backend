@@ -1,13 +1,16 @@
 package kr.swyp.backend.member.dto;
 
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import kr.swyp.backend.member.domain.Member;
 import kr.swyp.backend.member.domain.MemberNotificationSetting;
 import kr.swyp.backend.member.domain.MemberSocialLoginInfo;
 import kr.swyp.backend.member.enums.SocialLoginProviderType;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 public class MemberDto {
 
@@ -40,6 +43,17 @@ public class MemberDto {
                     .providerType(socialLoginInfo.getProviderType())
                     .build();
         }
+    }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class MemberWithdrawRequest {
+
+        @NotNull(message = "탈퇴 사유는 필수입니다.")
+        private String reasonType;
+        private String customReason;
     }
 }
 
