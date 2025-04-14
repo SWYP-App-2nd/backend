@@ -25,8 +25,8 @@ import org.hibernate.annotations.Comment;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "FRIEND_CHECK_SCHEDULE")
-public class FriendCheckSchedule extends BaseEntity {
+@Table(name = "FRIEND_CHECKING_LOG")
+public class FriendCheckingLog extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -85,7 +85,7 @@ public class Friend extends BaseEntity {
 
     @Default
     @OneToMany(mappedBy = "friend", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<FriendCheckSchedule> checkSchedules = new ArrayList<>();
+    private List<FriendCheckingLog> checkSchedules = new ArrayList<>();
 
     public void addFriendDetail(FriendDetail friendDetail) {
         this.friendDetail = friendDetail;
