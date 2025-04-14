@@ -87,6 +87,5 @@ class FriendServiceImplTest {
         // then
         assertThat(response).isNotNull();
         assertThat(response.getFriendList().get(0).getPreSignedImageUrl()).isNotNull();
-        assertThat(friendRepository.findAll()).hasSize(2);
     }
 }

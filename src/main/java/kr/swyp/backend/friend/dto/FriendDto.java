@@ -4,10 +4,12 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotNull;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import kr.swyp.backend.common.dto.FileDto.FileUploadRequest;
 import kr.swyp.backend.friend.domain.FriendAnniversary;
+import kr.swyp.backend.friend.domain.FriendCheckingLog;
 import kr.swyp.backend.friend.domain.FriendContactFrequency;
 import kr.swyp.backend.friend.enums.FriendContactWeek;
 import kr.swyp.backend.friend.enums.FriendSource;
@@ -142,6 +144,21 @@ public class FriendDto {
                             .build();
                 }
             }
+        }
+    }
+
+    @Getter
+    @Builder
+    public static class FriendCheckLogResponse {
+
+        private Boolean isChecked;
+        private LocalDateTime createdAt;
+
+        public static FriendCheckLogResponse fromEntity(FriendCheckingLog log) {
+            return FriendCheckLogResponse.builder()
+                    .isChecked(log.getIsChecked())
+                    .createdAt(log.getCreatedAt())
+                    .build();
         }
     }
 }

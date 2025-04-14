@@ -3,6 +3,7 @@ package kr.swyp.backend.friend.controller;
 import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document;
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
 import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
@@ -10,6 +11,8 @@ import static org.springframework.restdocs.operation.preprocess.Preprocessors.pr
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.pathParameters;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -21,14 +24,26 @@ import java.util.List;
 import java.util.UUID;
 import kr.swyp.backend.authentication.provider.TokenProvider;
 import kr.swyp.backend.common.dto.FileDto.FileUploadRequest;
+import kr.swyp.backend.friend.domain.Friend;
+import kr.swyp.backend.friend.domain.FriendCheckingLog;
 import kr.swyp.backend.friend.domain.FriendContactFrequency;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListRequest;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListRequest.FriendRequest;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListRequest.FriendRequest.FriendAnniversaryCreateRequest;
 import kr.swyp.backend.friend.enums.FriendContactWeek;
 import kr.swyp.backend.friend.enums.FriendSource;
+import kr.swyp.backend.friend.repository.FriendCheckingLogRepository;
+import kr.swyp.backend.friend.repository.FriendRepository;
+import kr.swyp.backend.member.domain.Member;
+import kr.swyp.backend.member.domain.MemberNotificationSetting;
+import kr.swyp.backend.member.domain.MemberSocialLoginInfo;
 import kr.swyp.backend.member.dto.MemberDetails;
 import kr.swyp.backend.member.enums.RoleType;
+import kr.swyp.backend.member.enums.SocialLoginProviderType;
+import kr.swyp.backend.member.repository.MemberNotificationSettingRepository;
+import kr.swyp.backend.member.repository.MemberRepository;
+import kr.swyp.backend.member.repository.MemberSocialLoginInfoRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,6 +111,69 @@ class FriendControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private FriendRepository friendRepository;
+
+    @Autowired
+    private MemberRepository memberRepository;
+
+    @Autowired
+    private MemberSocialLoginInfoRepository socialLoginInfoRepository;
+
+    @Autowired
+    private MemberNotificationSettingRepository notificationSettingRepository;
+
+    @Autowired
+    private FriendCheckingLogRepository friendCheckingLogRepository;
+
+    private Member testMember;
+    private Friend testFriend;
+
+    @BeforeEach
+    void setUp() {
+        // 테스트용 회원 생성
+        testMember = memberRepository.save(
+                Member.builder()
+                        .username("testuser@example.com")
+                        .password("encoded_password")
+                        .nickname("테스트유저")
+                        .isActive(true)
+                        .build()
+        );
+
+        // 역할 추가
+        testMember.addRole(RoleType.USER);
+
+        // 소셜 로그인 정보 추가
+        socialLoginInfoRepository.save(MemberSocialLoginInfo.builder()
+                .member(testMember)
+                .providerType(SocialLoginProviderType.KAKAO)
+                .providerId("kakao_123")
+                .build());
+
+        // 푸시 알림 설정 추가
+        notificationSettingRepository.save(MemberNotificationSetting.builder()
+                .memberId(testMember.getMemberId())
+                .enablePush(true)
+                .build());
+
+        // 친구 설정
+        testFriend = friendRepository.save(
+                Friend.builder()
+                        .name("테스트친구")
+                        .friendSource(FriendSource.KAKAO)
+                        .contactFrequency(FriendContactFrequency.builder()
+                                .contactWeek(FriendContactWeek.EVERY_WEEK)
+                                .dayOfWeek(DayOfWeek.MONDAY)
+                                .build())
+                        .alarmTriggerCount(0)
+                        .position(0)
+                        .nextContactAt(LocalDate.now().plusDays(7))
+                        .memberId(testMember.getMemberId())
+                        .build()
+        );
+    }
 
     @Test
     @DisplayName("친구를 추가할 수 있어야 한다.")
@@ -171,6 +249,7 @@ class FriendControllerTest {
         ));
     }
 
+
     private String createAccessToken(UUID memberId) {
         List<GrantedAuthority> authorities = Collections.singletonList(
                 new SimpleGrantedAuthority(RoleType.USER.name()));
@@ -179,4 +258,121 @@ class FriendControllerTest {
                 authorities);
         return tokenProvider.generateAccessToken(authentication);
     }
+
+    @Test
+    @DisplayName("챙기기 버튼 반영을 성공적으로 처리해야 한다.")
+    void 챙기기_버튼_반영을_성공적으로_처리해야_한다() throws Exception {
+        // given
+        UUID memberId = testMember.getMemberId();
+        UUID friendId = testFriend.getFriendId();
+        String accessToken = createAccessToken(memberId);
+
+        // when
+        ResultActions result = mockMvc.perform(post("/friend/record/{friendId}", friendId)
+                .header(AUTHORIZATION_HEADER, AUTHORIZATION_VALUE_PREFIX + accessToken)
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("챙기기 버튼 반영이 완료되었습니다."));
+
+        // docs
+        result.andDo(document("친구 챙기기 버튼 반영",
+                "사용자가 친구를 챙기기로 표시하면 해당 친구의 체크 로그를 기록하고 체크율을 업데이트한다.",
+                "챙기기 버튼 클릭 시 성공 메시지를 응답한다.",
+                false,
+                false,
+                preprocessRequest(prettyPrint()),
+                preprocessResponse(prettyPrint()),
+                requestHeaders(
+                        headerWithName(AUTHORIZATION_HEADER).description("발급받은 JWT")
+                ),
+                pathParameters(
+                        parameterWithName("friendId").description("챙기기를 반영할 친구의 UUID")
+                ),
+                responseFields(
+                        fieldWithPath("message").description("성공 시 응답 메시지")
+                )
+        ));
+    }
+
+    @Test
+    @DisplayName("친구 챙김 로그를 성공적으로 조회해야 한다.")
+    void 친구_챙김_로그를_성공적으로_조회해야_한다() throws Exception {
+        // given
+        UUID memberId = testMember.getMemberId();
+        UUID friendId = testFriend.getFriendId();
+        String accessToken = createAccessToken(memberId);
+
+        // 사전 데이터 삽입
+        friendCheckingLogRepository.save(FriendCheckingLog.of(testFriend, true));
+        friendCheckingLogRepository.save(FriendCheckingLog.of(testFriend, false));
+
+        // when
+        ResultActions result = mockMvc.perform(get("/friend/record/{friendId}", friendId)
+                .header(AUTHORIZATION_HEADER, AUTHORIZATION_VALUE_PREFIX + accessToken)
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+
+        // docs
+        result.andDo(document("친구 챙김 로그 조회",
+                "사용자가 친구의 챙김 기록을 조회한다.",
+                "특정 친구의 챙김 로그 리스트를 반환한다.",
+                false,
+                false,
+                preprocessRequest(prettyPrint()),
+                preprocessResponse(prettyPrint()),
+                requestHeaders(
+                        headerWithName(AUTHORIZATION_HEADER).description("발급받은 JWT")
+                ),
+                pathParameters(
+                        parameterWithName("friendId").description("챙김 기록을 조회할 친구의 UUID")
+                ),
+                responseFields(
+                        fieldWithPath("[].createdAt").description("챙김한 날짜"),
+                        fieldWithPath("[].checked").description("챙김 여부")
+                )
+        ));
+    }
+
+    @Test
+    @DisplayName("트리거된 알람 개수 반영을 성공적으로 처리해야 한다.")
+    void 트리거된_알람_개수_반영을_성공적으로_처리해야_한다() throws Exception {
+        // given
+        UUID memberId = testMember.getMemberId();
+        UUID friendId = testFriend.getFriendId();
+        String accessToken = createAccessToken(memberId);
+
+        // when
+        ResultActions result = mockMvc.perform(post("/friend/reminder/{friendId}", friendId)
+                .header(AUTHORIZATION_HEADER, AUTHORIZATION_VALUE_PREFIX + accessToken)
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("트리거된 알람 개수 반영이 완료되었습니다."));
+
+        // docs
+        result.andDo(document("친구 알람 트리거 반영",
+                "사용자가 친구 알람을 확인했을 때 알람 트리거 횟수를 업데이트한다.",
+                "알람 확인 요청 시 성공 메시지를 반환한다.",
+                false,
+                false,
+                preprocessRequest(prettyPrint()),
+                preprocessResponse(prettyPrint()),
+                requestHeaders(
+                        headerWithName(AUTHORIZATION_HEADER).description("발급받은 JWT")
+                ),
+                pathParameters(
+                        parameterWithName("friendId").description("알람 트리거를 반영할 친구의 UUID")
+                ),
+                responseFields(
+                        fieldWithPath("message").description("성공 시 응답 메시지")
+                )
+        ));
+    }
+
 }

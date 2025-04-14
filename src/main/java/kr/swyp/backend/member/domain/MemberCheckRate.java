@@ -37,4 +37,8 @@ public class MemberCheckRate extends BaseEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "MEMBER_ID")
     private Member member;
+
+    public void updateCheckRate(Integer checkRate) {
+        this.checkRate = checkRate;
+    }
 }
