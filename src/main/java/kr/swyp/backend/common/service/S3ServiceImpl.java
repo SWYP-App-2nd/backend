@@ -41,14 +41,6 @@ public class S3ServiceImpl implements S3Service {
         String generatedFileName = generateFileName(request.getCategory(), memberId,
                 request.getFileName());
 
-        fileRepository.save(File.builder()
-                .memberId(memberId)
-                .fileName(request.getFileName())
-                .category(request.getCategory())
-                .contentType(request.getContentType())
-                .fileSize(request.getFileSize())
-                .build());
-
         PutObjectRequest s3PutObjectRequest = PutObjectRequest.builder()
                 .bucket(properties.getBucketName())
                 .key(generatedFileName)
@@ -72,8 +64,8 @@ public class S3ServiceImpl implements S3Service {
     @Override
     @Transactional
     public FileDownloadResponse generatePreSignedUrlForDownload(UUID memberId, String category,
-            String objectKey) {
-        String generatedFileName = generateFileName(category, memberId, objectKey);
+            String fileName) {
+        String generatedFileName = generateFileName(category, memberId, fileName);
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(properties.getBucketName())
                 .key(generatedFileName)
@@ -97,11 +89,6 @@ public class S3ServiceImpl implements S3Service {
     @Transactional
     public Boolean deleteFile(UUID memberId, FileDeleteRequest request) {
         try {
-            File file = fileRepository.findByFileNameAndCategoryAndMemberId(request.getFileName(),
-                            request.getCategory(), memberId)
-                    .orElseThrow(() -> new IllegalArgumentException("파일을 찾을 수 없습니다."));
-            fileRepository.delete(file);
-
             String generatedFileName = generateFileName(request.getCategory(), memberId,
                     request.getFileName());
 
@@ -115,6 +102,18 @@ public class S3ServiceImpl implements S3Service {
         } catch (S3Exception e) {
             return false;
         }
+    }
+
+    @Override
+    @Transactional
+    public File createFile(UUID memberId, FileUploadRequest request) {
+        return fileRepository.save(File.builder()
+                .memberId(memberId)
+                .fileName(request.getFileName())
+                .category(request.getCategory())
+                .contentType(request.getContentType())
+                .fileSize(request.getFileSize())
+                .build());
     }
 
     private String generateFileName(String category, UUID memberId, String fileName) {

@@ -1,12 +1,10 @@
 package kr.swyp.backend.common.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.ThrowableAssert.catchThrowable;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.util.UUID;
-import kr.swyp.backend.common.domain.File;
 import kr.swyp.backend.common.dto.FileDto.FileDeleteRequest;
 import kr.swyp.backend.common.dto.FileDto.FileDownloadResponse;
 import kr.swyp.backend.common.dto.FileDto.FileUploadRequest;
@@ -90,16 +88,7 @@ public class S3ServiceImplTest {
                 .fileName("test.txt")
                 .category("test")
                 .build();
-
-        File file = File.builder()
-                .memberId(memberId)
-                .fileName(request.getFileName())
-                .category(request.getCategory())
-                .contentType("text/plain")
-                .fileSize(100L)
-                .build();
-        fileRepository.save(file);
-
+        
         when(s3Client.deleteObject(any(DeleteObjectRequest.class))).thenReturn(
                 any(DeleteObjectResponse.class));
 
@@ -108,23 +97,5 @@ public class S3ServiceImplTest {
 
         // Then
         assertThat(result).isTrue();
-    }
-
-    @Test
-    @DisplayName("파일을 삭제할 시에 파일이 없는 경우 예외를 발생시켜야 한다.")
-    void 파일을_삭제할_시_파일이_없는_경우_예외를_발생시켜야_한다() {
-        // Given
-        UUID memberId = UUID.randomUUID();
-        FileDeleteRequest request = FileDeleteRequest.builder()
-                .fileName("non-existent.txt")
-                .category("test")
-                .build();
-
-        Throwable throwable = catchThrowable(
-                () -> s3Service.deleteFile(memberId, request));
-
-        // When & Then
-        assertThat(throwable).isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("파일을 찾을 수 없습니다.");
     }
 }

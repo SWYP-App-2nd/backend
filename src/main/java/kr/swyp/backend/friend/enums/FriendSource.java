@@ -7,5 +7,5 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum FriendSource {
     KAKAO,
-    ADDRESS_BOOK
+    APPLE
 }
