@@ -38,7 +38,6 @@ public class FriendDetail extends BaseEntity {
     @Comment("FRIEND 테이블 외래키")
     private Friend friend;
 
-    @NotNull
     @Column(name = "PHONE")
     @Comment("전화번호")
     private String phone;
@@ -55,4 +54,7 @@ public class FriendDetail extends BaseEntity {
     @Comment("친구에 대한 메모")
     private String memo;
 
+    @Column(name = "IMAGE_FILE_ID")
+    @Comment("친구 이미지 파일 ID")
+    private Long imageFileId;
 }

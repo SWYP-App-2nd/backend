@@ -40,9 +40,9 @@ public class S3Controller {
     public ResponseEntity<FileDownloadResponse> downloadFile(
             @AuthenticationPrincipal MemberDetails memberDetails,
             @RequestParam String category,
-            @RequestParam String objectKey) {
+            @RequestParam String fileName) {
         FileDownloadResponse response = s3Service.generatePreSignedUrlForDownload(
-                memberDetails.getMemberId(), category, objectKey);
+                memberDetails.getMemberId(), category, fileName);
         return ResponseEntity.ok(response);
     }
 

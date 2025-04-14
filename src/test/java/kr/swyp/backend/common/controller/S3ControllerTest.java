@@ -142,7 +142,7 @@ public class S3ControllerTest {
                         AUTHORIZATION_VALUE_PREFIX + createAccessToken(memberId
                         ))
                 .param("category", request.getCategory())
-                .param("objectKey", request.getFileName()));
+                .param("fileName", request.getFileName()));
 
         // then
         result.andExpect(status().isOk())
@@ -160,7 +160,7 @@ public class S3ControllerTest {
                         headerWithName(AUTHORIZATION_HEADER).description("발급받은 JWT")),
                 queryParameters(
                         parameterWithName("category").description("파일 카테고리"),
-                        parameterWithName("objectKey").description("파일 이름")
+                        parameterWithName("fileName").description("파일 이름")
                 ),
                 responseFields(
                         fieldWithPath("preSignedUrl").description("preSignedUrl")
