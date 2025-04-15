@@ -4,7 +4,6 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import kr.swyp.backend.member.domain.Member;
-import kr.swyp.backend.member.domain.MemberNotificationSetting;
 import kr.swyp.backend.member.domain.MemberSocialLoginInfo;
 import kr.swyp.backend.member.enums.SocialLoginProviderType;
 import lombok.AllArgsConstructor;
@@ -25,12 +24,10 @@ public class MemberDto {
         private Integer averageRate;
         private Boolean isActive;
         private LocalDateTime marketingAgreedAt;
-        private Boolean enablePush; // 푸시 수신 여부
         private SocialLoginProviderType providerType; // 소셜 로그인 제공자
 
         public static MemberInfoResponse fromEntity(Member member,
-                MemberSocialLoginInfo socialLoginInfo,
-                MemberNotificationSetting notificationSetting) {
+                MemberSocialLoginInfo socialLoginInfo) {
             return MemberInfoResponse.builder()
                     .memberId(member.getMemberId())
                     .username(member.getUsername())
@@ -39,7 +36,6 @@ public class MemberDto {
                     .averageRate(0) // 평균 챙김률은 초기에 0으로 설정
                     .isActive(member.getIsActive())
                     .marketingAgreedAt(member.getMarketingAgreedAt())
-                    .enablePush(notificationSetting.getEnablePush())
                     .providerType(socialLoginInfo.getProviderType())
                     .build();
         }

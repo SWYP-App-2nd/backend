@@ -4,7 +4,6 @@ import java.util.NoSuchElementException;
 import java.util.UUID;
 import kr.swyp.backend.authentication.repository.RefreshTokenRepository;
 import kr.swyp.backend.member.domain.Member;
-import kr.swyp.backend.member.domain.MemberNotificationSetting;
 import kr.swyp.backend.member.domain.MemberSocialLoginInfo;
 import kr.swyp.backend.member.domain.MemberWithdrawalLog;
 import kr.swyp.backend.member.dto.MemberDto.MemberInfoResponse;
@@ -37,12 +36,7 @@ public class MemberServiceImpl implements MemberService {
         MemberSocialLoginInfo socialLoginInfo = socialLoginInfoRepository.findByMember(member)
                 .orElseThrow(() -> new NoSuchElementException("소셜 로그인 정보를 찾을 수 없습니다."));
 
-        // MemberNotificationSetting 조회
-        MemberNotificationSetting notificationSetting = notificationSettingRepository
-                .findByMemberId(memberId)
-                .orElseThrow(() -> new NoSuchElementException("푸시 알림 설정 정보를 찾을 수 없습니다."));
-
-        return MemberInfoResponse.fromEntity(member, socialLoginInfo, notificationSetting);
+        return MemberInfoResponse.fromEntity(member, socialLoginInfo);
     }
 
     @Override

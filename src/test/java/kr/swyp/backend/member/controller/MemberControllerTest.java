@@ -63,7 +63,6 @@ class MemberControllerTest {
             fieldWithPath("averageRate").description("평균 챙김률"),
             fieldWithPath("isActive").description("활성 상태 여부"),
             fieldWithPath("marketingAgreedAt").description("마케팅 수신 동의 시각").optional(),
-            fieldWithPath("enablePush").description("푸시 알림 여부"),
             fieldWithPath("providerType").description("소셜 로그인 제공자")
     };
 
@@ -144,9 +143,7 @@ class MemberControllerTest {
         // then
         result.andExpect(jsonPath("$.username").value("testuser@example.com"))
                 .andExpect(jsonPath("$.nickname").value("테스트유저"))
-                .andExpect(jsonPath("$.providerType").value("KAKAO"))
-                .andExpect(jsonPath("$.enablePush").value(true));
-
+                .andExpect(jsonPath("$.providerType").value("KAKAO"));
         // docs
         result.andDo(document("회원 정보 조회 성공",
                 "올바른 엑세스 토큰으로 회원 정보를 조회할 수 있다.",
