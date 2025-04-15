@@ -96,6 +96,7 @@ class MemberControllerTest {
                         .username("testuser@example.com")
                         .password("encoded_password")
                         .nickname("테스트유저")
+                        .isActive(true)
                         .build()
         );
 
