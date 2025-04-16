@@ -249,16 +249,6 @@ class FriendControllerTest {
         ));
     }
 
-
-    private String createAccessToken(UUID memberId) {
-        List<GrantedAuthority> authorities = Collections.singletonList(
-                new SimpleGrantedAuthority(RoleType.USER.name()));
-        MemberDetails memberDetails = new MemberDetails(memberId, "test", "", authorities);
-        Authentication authentication = new UsernamePasswordAuthenticationToken(memberDetails, "",
-                authorities);
-        return tokenProvider.generateAccessToken(authentication);
-    }
-
     @Test
     @DisplayName("챙기기 버튼 반영을 성공적으로 처리해야 한다.")
     void 챙기기_버튼_반영을_성공적으로_처리해야_한다() throws Exception {
@@ -374,5 +364,13 @@ class FriendControllerTest {
                 )
         ));
     }
-
+    
+    private String createAccessToken(UUID memberId) {
+        List<GrantedAuthority> authorities = Collections.singletonList(
+                new SimpleGrantedAuthority(RoleType.USER.name()));
+        MemberDetails memberDetails = new MemberDetails(memberId, "test", "", authorities);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(memberDetails, "",
+                authorities);
+        return tokenProvider.generateAccessToken(authentication);
+    }
 }
