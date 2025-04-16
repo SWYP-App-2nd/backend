@@ -80,6 +80,13 @@ public class Friend extends BaseEntity {
     @Comment("친구별 챙김 체크율 (0~100%)")
     private Integer checkRate = 0;
 
+    @NotNull
+    @Min(0)
+    @Comment("트리거된 알람 개수")
+    @Default
+    @Column(name = "ALARM_TRIGGER_COUNT")
+    private Integer alarmTriggerCount = 0;
+
     @OneToOne(mappedBy = "friend", cascade = CascadeType.ALL, orphanRemoval = true)
     private FriendDetail friendDetail;
 
@@ -90,4 +97,13 @@ public class Friend extends BaseEntity {
     public void addFriendDetail(FriendDetail friendDetail) {
         this.friendDetail = friendDetail;
     }
+
+    public void updateCheckRate(int checkRate) {
+        this.checkRate = checkRate;
+    }
+    
+    public void updateAlarmTriggerCount() {
+        this.alarmTriggerCount += 1;
+    }
 }
+

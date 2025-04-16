@@ -10,7 +10,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
-import java.time.LocalDate;
 import kr.swyp.backend.common.domain.BaseEntity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -39,13 +38,15 @@ public class FriendCheckingLog extends BaseEntity {
     @Comment("FRIEND 테이블 외래키")
     private Friend friend;
 
-    @NotNull
-    @Column(name = "SCHEDULE_DATE")
-    @Comment("챙겨야 할 날짜")
-    private LocalDate scheduleDate;
-
     @Default
     @Column(name = "IS_CHECKED")
     @Comment("해당 날짜에 사용자가 체크했는지 여부")
     private Boolean isChecked = false;
+
+    public static FriendCheckingLog of(Friend friend, Boolean isChecked) {
+        return FriendCheckingLog.builder()
+                .friend(friend)
+                .isChecked(isChecked)
+                .build();
+    }
 }

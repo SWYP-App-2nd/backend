@@ -60,10 +60,8 @@ class MemberControllerTest {
             fieldWithPath("username").description("회원 이메일"),
             fieldWithPath("nickname").description("사용자 이름"),
             fieldWithPath("imageUrl").description("프로필 이미지 URL").optional(),
-            fieldWithPath("averageRate").description("평균 챙김률"),
-            fieldWithPath("isActive").description("활성 상태 여부"),
             fieldWithPath("marketingAgreedAt").description("마케팅 수신 동의 시각").optional(),
-            fieldWithPath("providerType").description("소셜 로그인 제공자")
+            fieldWithPath("providerType").description("소셜 로그인 제공자"),
     };
 
     private final String url = "/member";
@@ -232,6 +230,35 @@ class MemberControllerTest {
                 requestFields(
                         fieldWithPath("reasonType").description("탈퇴 사유"),
                         fieldWithPath("customReason").description("탈퇴 사유 상세").optional()
+                )
+        ));
+    }
+
+    @Test
+    @DisplayName("회원 체크율을 계산하고 저장할 수 있다.")
+    void 회원_체크율을_계산하고_저장할_수_있다() throws Exception {
+
+        // when
+        ResultActions result = mockMvc.perform(get("/member/check-rate")
+                        .header(AUTHORIZATION_HEADER, TOKEN_PREFIX + accessToken))
+                .andExpect(status().isOk());
+
+        // then
+        result.andExpect(jsonPath("$.checkRate").isNumber());
+
+        // docs
+        result.andDo(document("회원 체크율 계산 및 저장",
+                "회원의 친구 챙김 기록을 기반으로 체크율을 계산하고 저장한 후 응답한다.",
+                "회원의 체크율(%)을 반환한다.",
+                false,
+                false,
+                preprocessRequest(prettyPrint()),
+                preprocessResponse(prettyPrint()),
+                requestHeaders(
+                        headerWithName(AUTHORIZATION_HEADER).description("발급받은 JWT")
+                ),
+                responseFields(
+                        fieldWithPath("checkRate").description("회원의 평균 챙김 체크율 (0~100%)")
                 )
         ));
     }

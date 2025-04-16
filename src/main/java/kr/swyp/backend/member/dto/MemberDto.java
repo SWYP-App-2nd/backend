@@ -21,8 +21,6 @@ public class MemberDto {
         private String username;
         private String nickname;
         private String imageUrl;
-        private Integer averageRate;
-        private Boolean isActive;
         private LocalDateTime marketingAgreedAt;
         private SocialLoginProviderType providerType; // 소셜 로그인 제공자
 
@@ -33,8 +31,6 @@ public class MemberDto {
                     .username(member.getUsername())
                     .nickname(member.getNickname())
                     .imageUrl(member.getImageUrl())
-                    .averageRate(0) // 평균 챙김률은 초기에 0으로 설정
-                    .isActive(member.getIsActive())
                     .marketingAgreedAt(member.getMarketingAgreedAt())
                     .providerType(socialLoginInfo.getProviderType())
                     .build();
@@ -50,6 +46,19 @@ public class MemberDto {
         @NotNull(message = "탈퇴 사유는 필수입니다.")
         private String reasonType;
         private String customReason;
+    }
+
+    @Getter
+    @Builder
+    public static class CheckRateResponse {
+
+        private Integer checkRate;
+
+        public static CheckRateResponse fromEntity(int checkRate) {
+            return CheckRateResponse.builder()
+                    .checkRate(checkRate)
+                    .build();
+        }
     }
 }
 

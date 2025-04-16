@@ -1,14 +1,18 @@
 package kr.swyp.backend.friend.service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import kr.swyp.backend.common.domain.File;
 import kr.swyp.backend.common.service.S3Service;
 import kr.swyp.backend.friend.domain.Friend;
 import kr.swyp.backend.friend.domain.FriendAnniversary;
+import kr.swyp.backend.friend.domain.FriendCheckingLog;
 import kr.swyp.backend.friend.domain.FriendDetail;
 import kr.swyp.backend.friend.domain.FriendDetail.FriendDetailBuilder;
+import kr.swyp.backend.friend.dto.FriendDto.FriendCheckLogResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListRequest;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListRequest.FriendRequest.FriendAnniversaryCreateRequest;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListResponse;
@@ -16,6 +20,7 @@ import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListResponse.FriendRespo
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListResponse.FriendResponse.FriendAnniversaryCreateResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListResponse.FriendResponse.FriendResponseBuilder;
 import kr.swyp.backend.friend.repository.FriendAnniversaryRepository;
+import kr.swyp.backend.friend.repository.FriendCheckingLogRepository;
 import kr.swyp.backend.friend.repository.FriendRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,6 +33,7 @@ public class FriendServiceImpl implements FriendService {
     private final S3Service s3Service;
     private final FriendRepository friendRepository;
     private final FriendAnniversaryRepository friendAnniversaryRepository;
+    private final FriendCheckingLogRepository friendCheckingLogRepository;
 
     @Override
     @Transactional
@@ -90,4 +96,55 @@ public class FriendServiceImpl implements FriendService {
                 .friendList(friendResponseList)
                 .build();
     }
+
+    @Override
+    @Transactional
+    public void recordCheckAndUpdateRate(UUID memberId, UUID friendId) {
+        // Friend 엔티티 조회
+        Friend friend = friendRepository.findByFriendIdAndMemberId(friendId, memberId)
+                .orElseThrow(() -> new NoSuchElementException("해당 친구를 찾을 수 없습니다."));
+
+        // 체크 로그 생성 및 저장
+        FriendCheckingLog log = FriendCheckingLog.of(friend, true);
+        friendCheckingLogRepository.save(log);
+
+        // 체크율 계산
+        Integer checkCount = friendCheckingLogRepository.countCheckedLogsByFriendId(friendId);
+        int alarmTriggerCount = friend.getAlarmTriggerCount();
+        int checkRate = 0;
+
+        if (alarmTriggerCount > 0) {
+            checkRate = (int) Math.round(((double) checkCount / alarmTriggerCount) * 100);
+        }
+
+        // 체크율 업데이트
+        friend.updateCheckRate(checkRate);
+        friendRepository.save(friend);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<FriendCheckLogResponse> getCheckLogs(UUID memberId, UUID friendId) {
+
+        // Friend 엔티티 조회
+        Friend friend = friendRepository.findByFriendIdAndMemberId(friendId, memberId)
+                .orElseThrow(() -> new NoSuchElementException("해당 친구를 찾을 수 없습니다."));
+
+        List<FriendCheckingLog> logs = friendCheckingLogRepository.findByFriend_FriendId(
+                friend.getFriendId());
+
+        return logs.stream()
+                .map(FriendCheckLogResponse::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void updateAlarmCheck(UUID memberId, UUID friendId) {
+        Friend friend = friendRepository.findByFriendIdAndMemberId(friendId, memberId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 친구를 찾을 수 없습니다."));
+        friend.updateAlarmTriggerCount();
+        friendRepository.save(friend);
+    }
 }
+
