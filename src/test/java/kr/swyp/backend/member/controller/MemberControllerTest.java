@@ -122,10 +122,10 @@ class MemberControllerTest {
                                 testMember.getMemberId(),
                                 testMember.getUsername(),
                                 testMember.getPassword(),
-                                List.of(new SimpleGrantedAuthority(RoleType.USER.getAuthority()))
+                                List.of(new SimpleGrantedAuthority(RoleType.USER.name()))
                         ),
                         null,
-                        List.of(new SimpleGrantedAuthority(RoleType.USER.getAuthority()))
+                        List.of(new SimpleGrantedAuthority(RoleType.USER.name()))
                 )
         );
     }
@@ -165,10 +165,10 @@ class MemberControllerTest {
         String token = tokenProvider.generateAccessToken(
                 new UsernamePasswordAuthenticationToken(
                         new MemberDetails(randomId, "non@exist.com", "", List.of(
-                                new SimpleGrantedAuthority(RoleType.USER.getAuthority())
+                                new SimpleGrantedAuthority(RoleType.USER.name())
                         )),
                         null,
-                        List.of(new SimpleGrantedAuthority(RoleType.USER.getAuthority()))
+                        List.of(new SimpleGrantedAuthority(RoleType.USER.name()))
                 ));
 
         // when
@@ -198,9 +198,9 @@ class MemberControllerTest {
         String token = tokenProvider.generateAccessToken(
                 new UsernamePasswordAuthenticationToken(
                         new MemberDetails(testMember.getMemberId(), testMember.getUsername(), "",
-                                List.of(new SimpleGrantedAuthority(RoleType.USER.getAuthority()))),
+                                List.of(new SimpleGrantedAuthority(RoleType.USER.name()))),
                         null,
-                        List.of(new SimpleGrantedAuthority(RoleType.USER.getAuthority()))
+                        List.of(new SimpleGrantedAuthority(RoleType.USER.name()))
                 ));
 
         MemberWithdrawRequest request = MemberWithdrawRequest.builder()

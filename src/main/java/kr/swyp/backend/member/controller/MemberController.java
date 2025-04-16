@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/member")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('USER')")
+@PreAuthorize("hasAnyAuthority('USER', 'ADMIN', 'SUPER_ADMIN')")
 public class MemberController {
 
     private final MemberService memberService;
