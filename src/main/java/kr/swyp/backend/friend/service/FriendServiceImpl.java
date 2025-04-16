@@ -99,17 +99,20 @@ public class FriendServiceImpl implements FriendService {
 
     @Override
     @Transactional
-    public int saveFriendCheckRate(UUID friendId) {
+    public void recordCheckAndUpdateRate(UUID memberId, UUID friendId) {
         // Friend 엔티티 조회
-        Friend friend = friendRepository.findById(friendId)
+        Friend friend = friendRepository.findByFriendIdAndMemberId(friendId, memberId)
                 .orElseThrow(() -> new NoSuchElementException("해당 친구를 찾을 수 없습니다."));
+
+        // 체크 로그 생성 및 저장
+        FriendCheckingLog log = FriendCheckingLog.of(friend, true);
+        friendCheckingLogRepository.save(log);
 
         // 체크율 계산
         Integer checkCount = friendCheckingLogRepository.countCheckedLogsByFriendId(friendId);
-
         int alarmTriggerCount = friend.getAlarmTriggerCount();
-
         int checkRate = 0;
+
         if (alarmTriggerCount > 0) {
             checkRate = (int) Math.round(((double) checkCount / alarmTriggerCount) * 100);
         }
@@ -117,22 +120,6 @@ public class FriendServiceImpl implements FriendService {
         // 체크율 업데이트
         friend.updateCheckRate(checkRate);
         friendRepository.save(friend);
-
-        return checkRate;
-    }
-
-    @Override
-    @Transactional
-    public void recordCheckLog(UUID memberId, UUID friendId) {
-        // Friend 엔티티 조회
-        Friend friend = friendRepository.findByFriendIdAndMemberId(friendId, memberId)
-                .orElseThrow(() -> new NoSuchElementException("해당 친구를 찾을 수 없습니다."));
-
-        // 객체 생성
-        FriendCheckingLog log = FriendCheckingLog.of(friend, true);
-
-        // 저장
-        friendCheckingLogRepository.save(log);
     }
 
     @Override

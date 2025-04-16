@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/friend")
 @RequiredArgsConstructor
-@PreAuthorize("hasAuthority('USER')")
+@PreAuthorize("hasRole('USER')")
 public class FriendController {
 
     private final FriendService friendService;
@@ -39,11 +39,8 @@ public class FriendController {
             @AuthenticationPrincipal MemberDetails memberDetails,
             @PathVariable("friendId") UUID friendId) {
 
-        // 챙김 카운트 업데이트
-        friendService.recordCheckLog(memberDetails.getMemberId(), friendId);
-
-        // 친구 별 체크율 업데이트
-        friendService.saveFriendCheckRate(friendId);
+        // 친구별 체크 로그 생성 및 친구별 체크율 업데이트
+        friendService.recordCheckAndUpdateRate(memberDetails.getMemberId(), friendId);
 
         return ResponseEntity.ok(Map.of("message", "챙기기 버튼 반영이 완료되었습니다."));
     }

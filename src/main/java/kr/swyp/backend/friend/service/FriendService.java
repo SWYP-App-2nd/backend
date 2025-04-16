@@ -18,21 +18,6 @@ public interface FriendService {
     FriendCreateListResponse init(UUID memberId, FriendCreateListRequest request);
 
     /**
-     * 친구 체크율을 저장합니다.
-     *
-     * @param friendId 친구 ID
-     * @return 저장된 체크율
-     */
-    int saveFriendCheckRate(UUID friendId);
-
-    /**
-     * 친구 챙기기 버튼 클릭을 기록합니다.
-     *
-     * @param friendId 친구 ID
-     */
-    void recordCheckLog(UUID memberId, UUID friendId);
-
-    /**
      * 친구 챙김 로그를 가져옵니다.
      *
      * @param memberId 회원 ID
@@ -48,4 +33,12 @@ public interface FriendService {
      * @param friendId 친구 ID
      */
     void updateAlarmCheck(UUID memberId, UUID friendId);
+
+    /**
+     * 친구 체크율을 기록하고 업데이트합니다.
+     *
+     * @param memberId 회원 ID
+     * @param friendId 친구 ID
+     */
+    void recordCheckAndUpdateRate(UUID memberId, UUID friendId);
 }
