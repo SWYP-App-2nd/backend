@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import kr.swyp.backend.common.dto.FileDto.FileUploadRequest;
+import kr.swyp.backend.friend.domain.Friend;
 import kr.swyp.backend.friend.domain.FriendAnniversary;
 import kr.swyp.backend.friend.domain.FriendCheckingLog;
 import kr.swyp.backend.friend.domain.FriendContactFrequency;
@@ -158,6 +159,25 @@ public class FriendDto {
             return FriendCheckLogResponse.builder()
                     .isChecked(log.getIsChecked())
                     .createdAt(log.getCreatedAt())
+                    .build();
+        }
+    }
+
+    @Getter
+    @Builder
+    public static class FriendListResponse {
+
+        private UUID friendId;
+        private Integer position;
+        private String name;
+        private String imageUrl;
+
+        public static FriendListResponse fromEntity(Friend friend, String imageUrl) {
+            return FriendListResponse.builder()
+                    .friendId(friend.getFriendId())
+                    .position(friend.getPosition())
+                    .name(friend.getName())
+                    .imageUrl(imageUrl)
                     .build();
         }
     }

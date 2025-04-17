@@ -5,6 +5,7 @@ import java.util.UUID;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCheckLogResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListRequest;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListResponse;
+import kr.swyp.backend.friend.dto.FriendDto.FriendListResponse;
 
 public interface FriendService {
 
@@ -41,4 +42,12 @@ public interface FriendService {
      * @param friendId 친구 ID
      */
     void recordCheckAndUpdateRate(UUID memberId, UUID friendId);
+
+    /**
+     * 친구 목록을 가져옵니다.
+     *
+     * @param memberId 회원 ID
+     * @return 친구 목록 응답 리스트
+     */
+    List<FriendListResponse> getFriendList(UUID memberId);
 }

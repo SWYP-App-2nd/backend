@@ -6,6 +6,7 @@ import java.util.UUID;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCheckLogResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListRequest;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListResponse;
+import kr.swyp.backend.friend.dto.FriendDto.FriendListResponse;
 import kr.swyp.backend.friend.service.FriendService;
 import kr.swyp.backend.member.dto.MemberDetails;
 import lombok.RequiredArgsConstructor;
@@ -61,5 +62,13 @@ public class FriendController {
 
         friendService.updateAlarmCheck(memberDetails.getMemberId(), friendId);
         return ResponseEntity.ok(Map.of("message", "트리거된 알람 개수 반영이 완료되었습니다."));
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<List<FriendListResponse>> getFriendList(
+            @AuthenticationPrincipal MemberDetails memberDetails) {
+        UUID memberId = memberDetails.getMemberId();
+        List<FriendListResponse> friendList = friendService.getFriendList(memberId);
+        return ResponseEntity.ok(friendList);
     }
 }

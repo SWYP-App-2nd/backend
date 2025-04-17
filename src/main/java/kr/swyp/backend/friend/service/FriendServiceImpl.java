@@ -2,10 +2,12 @@ package kr.swyp.backend.friend.service;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import kr.swyp.backend.common.domain.File;
+import kr.swyp.backend.common.repository.FileRepository;
 import kr.swyp.backend.common.service.S3Service;
 import kr.swyp.backend.friend.domain.Friend;
 import kr.swyp.backend.friend.domain.FriendAnniversary;
@@ -19,6 +21,7 @@ import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListResponse.FriendResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListResponse.FriendResponse.FriendAnniversaryCreateResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListResponse.FriendResponse.FriendResponseBuilder;
+import kr.swyp.backend.friend.dto.FriendDto.FriendListResponse;
 import kr.swyp.backend.friend.repository.FriendAnniversaryRepository;
 import kr.swyp.backend.friend.repository.FriendCheckingLogRepository;
 import kr.swyp.backend.friend.repository.FriendRepository;
@@ -34,6 +37,7 @@ public class FriendServiceImpl implements FriendService {
     private final FriendRepository friendRepository;
     private final FriendAnniversaryRepository friendAnniversaryRepository;
     private final FriendCheckingLogRepository friendCheckingLogRepository;
+    private final FileRepository fileRepository;
 
     @Override
     @Transactional
@@ -145,6 +149,28 @@ public class FriendServiceImpl implements FriendService {
                 .orElseThrow(() -> new IllegalArgumentException("해당 친구를 찾을 수 없습니다."));
         friend.updateAlarmTriggerCount();
         friendRepository.save(friend);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<FriendListResponse> getFriendList(UUID memberId) {
+        List<Friend> friends = friendRepository.findAllByMemberIdWithDetail(memberId);
+
+        return friends.stream()
+                .map(friend -> {
+                    String imageUrl = Optional.ofNullable(friend.getFriendDetail())
+                            .filter(detail -> detail.getImageFileId() != null)
+                            .flatMap(detail -> fileRepository.findById(detail.getImageFileId()))
+                            .map(imageFile -> s3Service.generatePreSignedUrlForDownload(
+                                    memberId,
+                                    imageFile.getCategory(),
+                                    imageFile.getFileName()
+                            ).getPreSignedUrl())
+                            .orElse(null);
+
+                    return FriendListResponse.fromEntity(friend, imageUrl);
+                })
+                .toList();
     }
 }
 
