@@ -23,16 +23,20 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import kr.swyp.backend.authentication.provider.TokenProvider;
+import kr.swyp.backend.common.domain.File;
 import kr.swyp.backend.common.dto.FileDto.FileUploadRequest;
+import kr.swyp.backend.common.repository.FileRepository;
 import kr.swyp.backend.friend.domain.Friend;
 import kr.swyp.backend.friend.domain.FriendCheckingLog;
 import kr.swyp.backend.friend.domain.FriendContactFrequency;
+import kr.swyp.backend.friend.domain.FriendDetail;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListRequest;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListRequest.FriendRequest;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListRequest.FriendRequest.FriendAnniversaryCreateRequest;
 import kr.swyp.backend.friend.enums.FriendContactWeek;
 import kr.swyp.backend.friend.enums.FriendSource;
 import kr.swyp.backend.friend.repository.FriendCheckingLogRepository;
+import kr.swyp.backend.friend.repository.FriendDetailRepository;
 import kr.swyp.backend.friend.repository.FriendRepository;
 import kr.swyp.backend.member.domain.Member;
 import kr.swyp.backend.member.domain.MemberNotificationSetting;
@@ -98,6 +102,13 @@ class FriendControllerTest {
             fieldWithPath("friendList[].phone").description("전화번호"),
     };
 
+    private final FieldDescriptor[] friendListResponseDescriptor = new FieldDescriptor[]{
+            fieldWithPath("[].friendId").description("친구 ID"),
+            fieldWithPath("[].position").description("친구 노출 순서"),
+            fieldWithPath("[].name").description("친구 이름"),
+            fieldWithPath("[].imageUrl").description("친구 프로필 이미지 URL")
+    };
+
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String AUTHORIZATION_VALUE_PREFIX = "Bearer ";
 
@@ -126,6 +137,12 @@ class FriendControllerTest {
 
     @Autowired
     private FriendCheckingLogRepository friendCheckingLogRepository;
+
+    @Autowired
+    private FriendDetailRepository friendDetailRepository;
+
+    @Autowired
+    private FileRepository fileRepository;
 
     private Member testMember;
     private Friend testFriend;
@@ -224,7 +241,7 @@ class FriendControllerTest {
         // when
         ResultActions result = mockMvc.perform(post(url + "/init")
                 .header(AUTHORIZATION_HEADER,
-                        AUTHORIZATION_VALUE_PREFIX + createAccessToken(UUID.randomUUID()))
+                        AUTHORIZATION_VALUE_PREFIX + createAccessToken(testMember.getMemberId()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(friendCreateListRequest)));
 
@@ -362,6 +379,65 @@ class FriendControllerTest {
                 responseFields(
                         fieldWithPath("message").description("성공 시 응답 메시지")
                 )
+        ));
+    }
+
+    @Test
+    @DisplayName("친구 목록을 성공적으로 조회해야 한다.")
+    void 친구_목록을_성공적으로_조회해야_한다() throws Exception {
+        // given
+        UUID memberId = testMember.getMemberId();
+        String accessToken = createAccessToken(memberId);
+
+        // File 저장
+        File imageFile = fileRepository.save(File.builder()
+                .fileName("img")
+                .contentType("image/jpeg")
+                .fileSize(1024L)
+                .category("profile")
+                .build());
+
+        // Friend 저장
+        Friend friend = friendRepository.save(Friend.builder()
+                .memberId(memberId)
+                .position(1)
+                .name("friend1")
+                .friendSource(FriendSource.KAKAO)
+                .contactFrequency(FriendContactFrequency.builder()
+                        .contactWeek(FriendContactWeek.EVERY_WEEK)
+                        .dayOfWeek(DayOfWeek.MONDAY)
+                        .build())
+                .nextContactAt(LocalDate.now().plusDays(7))
+                .build());
+
+        // FriendDetail 저장
+        friendDetailRepository.save(FriendDetail.builder()
+                .friend(friend)
+                .imageFileId(imageFile.getId())
+                .build());
+
+        // when
+        ResultActions result = mockMvc.perform(get("/friend/list")
+                .header(AUTHORIZATION_HEADER, AUTHORIZATION_VALUE_PREFIX + accessToken)
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].friendId").exists())
+                .andExpect(jsonPath("$[0].name").value("friend1"));
+
+        // docs
+        result.andDo(document("친구 목록 조회",
+                "등록된 친구 목록을 조회한다.",
+                "사용자의 챙길 친구 리스트를 조회해 각 친구의 정보를 반환한다.",
+                false,
+                false,
+                preprocessRequest(prettyPrint()),
+                preprocessResponse(prettyPrint()),
+                requestHeaders(
+                        headerWithName(AUTHORIZATION_HEADER).description("발급받은 JWT")
+                ),
+                responseFields(friendListResponseDescriptor)
         ));
     }
 
