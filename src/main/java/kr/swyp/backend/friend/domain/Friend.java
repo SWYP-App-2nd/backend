@@ -101,7 +101,11 @@ public class Friend extends BaseEntity {
     public void updateCheckRate(int checkRate) {
         this.checkRate = checkRate;
     }
-    
+
+    public void updatePosition(int position) {
+        this.position = position;
+    }
+
     public void updateAlarmTriggerCount() {
         this.alarmTriggerCount += 1;
     }

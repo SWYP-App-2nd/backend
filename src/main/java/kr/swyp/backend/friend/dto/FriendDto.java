@@ -183,4 +183,14 @@ public class FriendDto {
                     .build();
         }
     }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class FriendPositionUpdateRequest {
+
+        private Integer newPosition;
+
+    }
 }

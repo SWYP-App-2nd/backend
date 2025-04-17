@@ -4,6 +4,7 @@ import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.docume
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
 import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.patch;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
@@ -21,6 +22,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import kr.swyp.backend.authentication.provider.TokenProvider;
 import kr.swyp.backend.common.domain.File;
@@ -441,6 +443,51 @@ class FriendControllerTest {
                         headerWithName(AUTHORIZATION_HEADER).description("발급받은 JWT")
                 ),
                 responseFields(friendListResponseDescriptor)
+        ));
+    }
+
+    @Test
+    @DisplayName("친구 포지션을 성공적으로 변경해야 한다.")
+    void 친구_포지션을_성공적으로_변경해야_한다() throws Exception {
+        // given
+        UUID memberId = testMember.getMemberId();
+        UUID friendId = testFriend.getFriendId();
+        String accessToken = createAccessToken(memberId);
+
+        int newPosition = 3;
+
+        Map<String, Integer> requestBody = Map.of("newPosition", newPosition);
+
+        // when
+        ResultActions result = mockMvc.perform(patch("/friend/list/{id}", friendId)
+                .header(AUTHORIZATION_HEADER, AUTHORIZATION_VALUE_PREFIX + accessToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestBody)));
+
+        // then
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("포지션 변경이 완료되었습니다."));
+
+        // docs
+        result.andDo(document("친구 포지션 변경",
+                "특정 친구의 포지션을 변경한다.",
+                "친구 리스트에서 노출 순서를 사용자 요청에 따라 업데이트한다.",
+                false,
+                false,
+                preprocessRequest(prettyPrint()),
+                preprocessResponse(prettyPrint()),
+                requestHeaders(
+                        headerWithName(AUTHORIZATION_HEADER).description("발급받은 JWT")
+                ),
+                pathParameters(
+                        parameterWithName("id").description("포지션을 변경할 친구의 ID")
+                ),
+                requestFields(
+                        fieldWithPath("newPosition").description("변경할 포지션 값")
+                ),
+                responseFields(
+                        fieldWithPath("message").description("성공 시 응답 메시지")
+                )
         ));
     }
 
