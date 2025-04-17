@@ -105,6 +105,7 @@ class FriendControllerTest {
     private final FieldDescriptor[] friendListResponseDescriptor = new FieldDescriptor[]{
             fieldWithPath("[].friendId").description("친구 ID"),
             fieldWithPath("[].position").description("친구 노출 순서"),
+            fieldWithPath("[].source").description("친구 출처"),
             fieldWithPath("[].name").description("친구 이름"),
             fieldWithPath("[].imageUrl").description("친구 프로필 이미지 URL")
     };
@@ -424,6 +425,8 @@ class FriendControllerTest {
         // then
         result.andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].friendId").exists())
+                .andExpect(jsonPath("$[0].position").value(1))
+                .andExpect(jsonPath("$[0].source").value("KAKAO"))
                 .andExpect(jsonPath("$[0].name").value("friend1"));
 
         // docs

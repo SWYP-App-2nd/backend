@@ -169,6 +169,7 @@ public class FriendDto {
 
         private UUID friendId;
         private Integer position;
+        private String source;
         private String name;
         private String imageUrl;
 
@@ -176,6 +177,7 @@ public class FriendDto {
             return FriendListResponse.builder()
                     .friendId(friend.getFriendId())
                     .position(friend.getPosition())
+                    .source(friend.getFriendSource().name())
                     .name(friend.getName())
                     .imageUrl(imageUrl)
                     .build();
