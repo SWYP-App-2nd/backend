@@ -7,6 +7,7 @@ import kr.swyp.backend.friend.dto.FriendDto.FriendCheckLogResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListRequest;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendListResponse;
+import kr.swyp.backend.friend.dto.FriendDto.FriendPositionUpdateRequest;
 import kr.swyp.backend.friend.service.FriendService;
 import kr.swyp.backend.member.dto.MemberDetails;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -70,5 +72,16 @@ public class FriendController {
         UUID memberId = memberDetails.getMemberId();
         List<FriendListResponse> friendList = friendService.getFriendList(memberId);
         return ResponseEntity.ok(friendList);
+    }
+
+    @PatchMapping("/list/{id}")
+    public ResponseEntity<Map<String, String>> updateFriendPosition(
+            @AuthenticationPrincipal MemberDetails memberDetails,
+            @PathVariable("id") UUID friendId,
+            @RequestBody FriendPositionUpdateRequest request) {
+
+        UUID memberId = memberDetails.getMemberId();
+        friendService.updateFriendPosition(memberId, friendId, request.getNewPosition());
+        return ResponseEntity.ok(Map.of("message", "포지션 변경이 완료되었습니다."));
     }
 }

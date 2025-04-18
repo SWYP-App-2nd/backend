@@ -175,5 +175,12 @@ public class FriendServiceImpl implements FriendService {
                 })
                 .toList();
     }
+
+    @Transactional
+    public void updateFriendPosition(UUID memberId, UUID friendId, int newPosition) {
+        Friend friend = friendRepository.findByFriendIdAndMemberId(friendId, memberId)
+                .orElseThrow(() -> new NoSuchElementException("해당 친구를 찾을 수 없습니다."));
+        friend.updatePosition(newPosition);
+    }
 }
 

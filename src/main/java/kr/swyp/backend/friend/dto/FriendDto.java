@@ -170,6 +170,7 @@ public class FriendDto {
 
         private UUID friendId;
         private Integer position;
+        private String source;
         private String name;
         private String imageUrl;
         private String fileName;
@@ -179,10 +180,21 @@ public class FriendDto {
             return FriendListResponse.builder()
                     .friendId(friend.getFriendId())
                     .position(friend.getPosition())
+                    .source(friend.getFriendSource().name())
                     .name(friend.getName())
                     .imageUrl(imageUrl)
                     .fileName(fileName)
                     .build();
         }
+    }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class FriendPositionUpdateRequest {
+
+        private Integer newPosition;
+
     }
 }

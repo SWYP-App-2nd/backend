@@ -50,4 +50,13 @@ public interface FriendService {
      * @return 친구 목록 응답 리스트
      */
     List<FriendListResponse> getFriendList(UUID memberId);
+
+    /**
+     * 친구의 position을 업데이트합니다.
+     *
+     * @param memberId    회원 ID
+     * @param friendId    친구 ID
+     * @param newPosition 새로운 위치
+     */
+    void updateFriendPosition(UUID memberId, UUID friendId, int newPosition);
 }
