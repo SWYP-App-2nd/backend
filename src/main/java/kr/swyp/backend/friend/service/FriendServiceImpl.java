@@ -76,6 +76,7 @@ public class FriendServiceImpl implements FriendService {
                         File file = s3Service.createFile(memberId,
                                 friendRequest.getImageUploadRequest());
                         friendDetailBuilder.imageFileId(file.getId());
+                        friendResponseBuilder.fileName(file.getFileName());
                         friendResponseBuilder.preSignedImageUrl(preSignedUrl);
                     }
 
@@ -158,17 +159,19 @@ public class FriendServiceImpl implements FriendService {
 
         return friends.stream()
                 .map(friend -> {
-                    String imageUrl = Optional.ofNullable(friend.getFriendDetail())
+                    File imageFile = Optional.ofNullable(friend.getFriendDetail())
                             .filter(detail -> detail.getImageFileId() != null)
                             .flatMap(detail -> fileRepository.findById(detail.getImageFileId()))
-                            .map(imageFile -> s3Service.generatePreSignedUrlForDownload(
-                                    memberId,
-                                    imageFile.getCategory(),
-                                    imageFile.getFileName()
-                            ).getPreSignedUrl())
                             .orElse(null);
 
-                    return FriendListResponse.fromEntity(friend, imageUrl);
+                    String fileName = imageFile != null ? imageFile.getFileName() : null;
+                    String imageUrl = imageFile != null ? s3Service.generatePreSignedUrlForDownload(
+                            memberId,
+                            imageFile.getCategory(),
+                            imageFile.getFileName()
+                    ).getPreSignedUrl() : null;
+
+                    return FriendListResponse.fromEntity(friend, imageUrl, fileName);
                 })
                 .toList();
     }

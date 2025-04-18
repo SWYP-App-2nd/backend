@@ -99,6 +99,7 @@ class FriendControllerTest {
             fieldWithPath("friendList[].anniversary.date").description("기념일 날짜"),
             fieldWithPath("friendList[].nextContactAt").description("다음 연락 날짜"),
             fieldWithPath("friendList[].preSignedImageUrl").description("프리사인드 이미지 URL"),
+            fieldWithPath("friendList[].fileName").description("파일 이름"),
             fieldWithPath("friendList[].phone").description("전화번호"),
     };
 
@@ -106,7 +107,8 @@ class FriendControllerTest {
             fieldWithPath("[].friendId").description("친구 ID"),
             fieldWithPath("[].position").description("친구 노출 순서"),
             fieldWithPath("[].name").description("친구 이름"),
-            fieldWithPath("[].imageUrl").description("친구 프로필 이미지 URL")
+            fieldWithPath("[].imageUrl").description("친구 프로필 이미지 URL"),
+            fieldWithPath("[].fileName").description("친구 프로필 이미지 파일 이름"),
     };
 
     private static final String AUTHORIZATION_HEADER = "Authorization";

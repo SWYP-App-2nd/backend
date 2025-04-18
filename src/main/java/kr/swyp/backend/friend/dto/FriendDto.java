@@ -129,6 +129,7 @@ public class FriendDto {
             private LocalDate nextContactAt;
             private String phone;
             private String preSignedImageUrl;
+            private String fileName;
             private FriendAnniversaryCreateResponse anniversary;
 
             @Getter
@@ -171,13 +172,16 @@ public class FriendDto {
         private Integer position;
         private String name;
         private String imageUrl;
+        private String fileName;
 
-        public static FriendListResponse fromEntity(Friend friend, String imageUrl) {
+        public static FriendListResponse fromEntity(Friend friend, String imageUrl,
+                String fileName) {
             return FriendListResponse.builder()
                     .friendId(friend.getFriendId())
                     .position(friend.getPosition())
                     .name(friend.getName())
                     .imageUrl(imageUrl)
+                    .fileName(fileName)
                     .build();
         }
     }
