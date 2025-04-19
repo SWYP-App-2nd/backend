@@ -6,6 +6,7 @@ import java.util.UUID;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCheckLogResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListRequest;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListResponse;
+import kr.swyp.backend.friend.dto.FriendDto.FriendDetailResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendListResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendPositionUpdateRequest;
 import kr.swyp.backend.friend.service.FriendService;
@@ -83,5 +84,14 @@ public class FriendController {
         UUID memberId = memberDetails.getMemberId();
         friendService.updateFriendPosition(memberId, friendId, request.getNewPosition());
         return ResponseEntity.ok(Map.of("message", "포지션 변경이 완료되었습니다."));
+    }
+
+    @GetMapping("/{friendId}")
+    public ResponseEntity<FriendDetailResponse> getFriendDetail(
+            @AuthenticationPrincipal MemberDetails memberDetails,
+            @PathVariable("friendId") UUID friendId) {
+        FriendDetailResponse response = friendService.getFriendDetail(
+                memberDetails.getMemberId(), friendId);
+        return ResponseEntity.ok(response);
     }
 }

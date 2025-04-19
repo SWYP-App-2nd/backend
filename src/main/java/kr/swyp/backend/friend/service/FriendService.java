@@ -5,6 +5,7 @@ import java.util.UUID;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCheckLogResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListRequest;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListResponse;
+import kr.swyp.backend.friend.dto.FriendDto.FriendDetailResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendListResponse;
 
 public interface FriendService {
@@ -59,4 +60,13 @@ public interface FriendService {
      * @param newPosition 새로운 위치
      */
     void updateFriendPosition(UUID memberId, UUID friendId, int newPosition);
+
+    /**
+     * 친구 상세 정보를 가져옵니다.
+     *
+     * @param memberId 회원 ID
+     * @param friendId 친구 ID
+     * @return 친구 상세 정보 응답
+     */
+    FriendDetailResponse getFriendDetail(UUID memberId, UUID friendId);
 }

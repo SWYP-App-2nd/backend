@@ -2,6 +2,8 @@ package kr.swyp.backend.friend.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -12,6 +14,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import kr.swyp.backend.common.domain.BaseEntity;
+import kr.swyp.backend.friend.enums.FriendRelation;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -42,9 +45,11 @@ public class FriendDetail extends BaseEntity {
     @Comment("전화번호")
     private String phone;
 
+    @NotNull
     @Column(name = "RELATION")
     @Comment("관계 (예: 친구, 가족 등)")
-    private String relation;
+    @Enumerated(EnumType.STRING)
+    private FriendRelation relation;
 
     @Column(name = "BIRTHDAY")
     @Comment("생일")

@@ -12,7 +12,9 @@ import kr.swyp.backend.friend.domain.Friend;
 import kr.swyp.backend.friend.domain.FriendAnniversary;
 import kr.swyp.backend.friend.domain.FriendCheckingLog;
 import kr.swyp.backend.friend.domain.FriendContactFrequency;
+import kr.swyp.backend.friend.domain.FriendDetail;
 import kr.swyp.backend.friend.enums.FriendContactWeek;
+import kr.swyp.backend.friend.enums.FriendRelation;
 import kr.swyp.backend.friend.enums.FriendSource;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -50,6 +52,10 @@ public class FriendDto {
             private FriendAnniversaryCreateRequest anniversary;
 
             private String phone;
+
+            private LocalDate birthDay;
+
+            private FriendRelation relation;
 
             @Getter
             @Builder
@@ -154,6 +160,8 @@ public class FriendDto {
     public static class FriendCheckLogResponse {
 
         private Boolean isChecked;
+
+        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
         private LocalDateTime createdAt;
 
         public static FriendCheckLogResponse fromEntity(FriendCheckingLog log) {
@@ -195,6 +203,50 @@ public class FriendDto {
     public static class FriendPositionUpdateRequest {
 
         private Integer newPosition;
+    }
 
+    @Getter
+    @Builder
+    public static class FriendDetailResponse {
+
+        private UUID friendId;
+        private String imageUrl;
+        private FriendRelation relation;
+        private String name;
+        private FriendContactFrequency contactFrequency;
+        private LocalDate birthday;
+        private List<FriendAnniversaryDetailResponse> anniversaryList;
+        private String memo;
+
+        @Getter
+        @Builder
+        public static class FriendAnniversaryDetailResponse {
+
+            private String title;
+            private LocalDate date;
+
+            public static FriendAnniversaryDetailResponse fromEntity(FriendAnniversary entity) {
+                return FriendAnniversaryDetailResponse.builder()
+                        .title(entity.getTitle())
+                        .date(entity.getDate())
+                        .build();
+            }
+        }
+
+        public static FriendDetailResponse fromEntity(Friend friend, String imageUrl,
+                FriendDetail detail, List<FriendAnniversary> friendAnniversaryList) {
+            return FriendDetailResponse.builder()
+                    .friendId(friend.getFriendId())
+                    .imageUrl(imageUrl)
+                    .relation(detail.getRelation())
+                    .name(friend.getName())
+                    .contactFrequency(friend.getContactFrequency())
+                    .birthday(detail.getBirthday())
+                    .anniversaryList(friendAnniversaryList.stream()
+                            .map(FriendAnniversaryDetailResponse::fromEntity)
+                            .toList())
+                    .memo(detail.getMemo())
+                    .build();
+        }
     }
 }

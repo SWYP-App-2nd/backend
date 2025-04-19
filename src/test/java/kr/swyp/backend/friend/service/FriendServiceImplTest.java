@@ -13,6 +13,7 @@ import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListRequest.FriendReques
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListRequest.FriendRequest.FriendAnniversaryCreateRequest;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListResponse;
 import kr.swyp.backend.friend.enums.FriendContactWeek;
+import kr.swyp.backend.friend.enums.FriendRelation;
 import kr.swyp.backend.friend.enums.FriendSource;
 import kr.swyp.backend.friend.repository.FriendRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -44,6 +45,8 @@ class FriendServiceImplTest {
                         .friendList(List.of(FriendRequest.builder()
                                         .name("test")
                                         .source(FriendSource.KAKAO)
+                                        .relation(FriendRelation.FRIEND)
+                                        .birthDay(LocalDate.now())
                                         .contactFrequency(FriendContactFrequency.builder()
                                                 .contactWeek(FriendContactWeek.EVERY_WEEK)
                                                 .dayOfWeek(DayOfWeek.MONDAY)
@@ -62,6 +65,8 @@ class FriendServiceImplTest {
                                         .build(),
                                 FriendRequest.builder()
                                         .name("test")
+                                        .relation(FriendRelation.FRIEND)
+                                        .birthDay(LocalDate.now())
                                         .source(FriendSource.APPLE)
                                         .contactFrequency(FriendContactFrequency.builder()
                                                 .contactWeek(FriendContactWeek.EVERY_WEEK)
