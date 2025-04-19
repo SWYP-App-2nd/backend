@@ -508,6 +508,7 @@ class FriendControllerTest {
         ));
     }
 
+    @Test
     @DisplayName("친구를 상세조회 할 수 있어야 한다.")
     void 친구를_상세조회_할_수_있어야_한다() throws Exception {
         // given
