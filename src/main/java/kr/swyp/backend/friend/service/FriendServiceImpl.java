@@ -5,7 +5,6 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import kr.swyp.backend.common.domain.File;
 import kr.swyp.backend.common.repository.FileRepository;
 import kr.swyp.backend.common.service.S3Service;
@@ -21,6 +20,7 @@ import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListResponse.FriendResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListResponse.FriendResponse.FriendAnniversaryCreateResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListResponse.FriendResponse.FriendResponseBuilder;
+import kr.swyp.backend.friend.dto.FriendDto.FriendDetailResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendListResponse;
 import kr.swyp.backend.friend.repository.FriendAnniversaryRepository;
 import kr.swyp.backend.friend.repository.FriendCheckingLogRepository;
@@ -61,7 +61,9 @@ public class FriendServiceImpl implements FriendService {
 
                     FriendDetailBuilder friendDetailBuilder = FriendDetail.builder()
                             .friend(friend)
-                            .phone(friendRequest.getPhone());
+                            .phone(friendRequest.getPhone())
+                            .relation(friendRequest.getRelation())
+                            .birthday(friendRequest.getBirthDay());
 
                     FriendResponseBuilder friendResponseBuilder = FriendResponse.builder()
                             .friendId(friend.getFriendId())
@@ -140,7 +142,7 @@ public class FriendServiceImpl implements FriendService {
 
         return logs.stream()
                 .map(FriendCheckLogResponse::fromEntity)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -176,11 +178,36 @@ public class FriendServiceImpl implements FriendService {
                 .toList();
     }
 
+    @Override
     @Transactional
     public void updateFriendPosition(UUID memberId, UUID friendId, int newPosition) {
         Friend friend = friendRepository.findByFriendIdAndMemberId(friendId, memberId)
                 .orElseThrow(() -> new NoSuchElementException("해당 친구를 찾을 수 없습니다."));
         friend.updatePosition(newPosition);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public FriendDetailResponse getFriendDetail(UUID memberId, UUID friendId) {
+        Friend friend = friendRepository.findByFriendIdAndMemberId(friendId, memberId)
+                .orElseThrow(() -> new NoSuchElementException("해당 친구를 찾을 수 없습니다."));
+
+        File imageFile = Optional.ofNullable(friend.getFriendDetail())
+                .filter(detail -> detail.getImageFileId() != null)
+                .flatMap(detail -> fileRepository.findById(detail.getImageFileId()))
+                .orElse(null);
+
+        String imageUrl = imageFile != null ? s3Service.generatePreSignedUrlForDownload(
+                memberId,
+                imageFile.getCategory(),
+                imageFile.getFileName()
+        ).getPreSignedUrl() : null;
+
+        List<FriendAnniversary> friendAnniversaryList = friendAnniversaryRepository
+                .findByFriendId(friend.getFriendId());
+
+        return FriendDetailResponse.fromEntity(friend, imageUrl, friend.getFriendDetail(),
+                friendAnniversaryList);
     }
 }
 
