@@ -8,4 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface FriendAnniversaryRepository extends JpaRepository<FriendAnniversary, Long> {
 
     List<FriendAnniversary> findByFriendId(UUID friendId);
+
+    List<FriendAnniversary> findByIdIsIn(List<Long> ids);
 }
