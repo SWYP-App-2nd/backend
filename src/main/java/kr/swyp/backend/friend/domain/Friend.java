@@ -109,5 +109,13 @@ public class Friend extends BaseEntity {
     public void updateAlarmTriggerCount() {
         this.alarmTriggerCount += 1;
     }
+
+    public void updateName(String name) {
+        this.name = name;
+    }
+
+    public void updateFriendContactFrequency(FriendContactFrequency friendContactFrequency) {
+        this.contactFrequency = friendContactFrequency;
+    }
 }
 

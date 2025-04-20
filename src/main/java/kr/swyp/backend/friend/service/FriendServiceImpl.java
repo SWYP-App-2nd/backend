@@ -21,6 +21,8 @@ import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListResponse.FriendRespo
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListResponse.FriendResponse.FriendAnniversaryCreateResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListResponse.FriendResponse.FriendResponseBuilder;
 import kr.swyp.backend.friend.dto.FriendDto.FriendDetailResponse;
+import kr.swyp.backend.friend.dto.FriendDto.FriendDetailUpdateRequest;
+import kr.swyp.backend.friend.dto.FriendDto.FriendDetailUpdateRequest.FriendAnniversaryDetailUpdateRequest;
 import kr.swyp.backend.friend.dto.FriendDto.FriendListResponse;
 import kr.swyp.backend.friend.repository.FriendAnniversaryRepository;
 import kr.swyp.backend.friend.repository.FriendCheckingLogRepository;
@@ -207,6 +209,45 @@ public class FriendServiceImpl implements FriendService {
                 .findByFriendId(friend.getFriendId());
 
         return FriendDetailResponse.fromEntity(friend, imageUrl, friend.getFriendDetail(),
+                friendAnniversaryList);
+    }
+
+    @Override
+    @Transactional
+    public FriendDetailResponse updateFriend(UUID memberId, UUID friendId,
+            FriendDetailUpdateRequest request) {
+        Friend friend = friendRepository.findByFriendIdAndMemberId(friendId, memberId)
+                .orElseThrow(() -> new NoSuchElementException("해당 친구를 찾을 수 없습니다."));
+
+        List<FriendAnniversary> friendAnniversaryList = friendAnniversaryRepository
+                .findByIdIsIn(request.getAnniversaryList().stream()
+                        .map(FriendAnniversaryDetailUpdateRequest::getId)
+                        .toList());
+
+        // Friend 업데이트
+        friend.updateName(request.getName());
+        friend.updateFriendContactFrequency(request.getContactFrequency());
+
+        // FriendAnniversaryList 업데이트
+        request.getAnniversaryList().forEach(anniversaryRequest -> {
+            FriendAnniversary anniversaryToUpdate = friendAnniversaryList.stream()
+                    .filter(anniversary -> anniversary.getId().equals(anniversaryRequest.getId()))
+                    .findFirst()
+                    .orElseThrow(() -> new NoSuchElementException("해당 기념일을 찾을 수 없습니다."));
+
+            // 기념일 정보 업데이트
+            anniversaryToUpdate.updateDate(anniversaryRequest.getDate());
+            anniversaryToUpdate.updateTitle(anniversaryRequest.getTitle());
+        });
+
+        FriendDetail friendDetail = friend.getFriendDetail();
+        
+        // FriendDetail 업데이트
+        friendDetail.updateRelation(request.getRelation());
+        friendDetail.updateBirthday(request.getBirthday());
+        friendDetail.updateMemo(request.getMemo());
+
+        return FriendDetailResponse.fromEntity(friend, null, friendDetail,
                 friendAnniversaryList);
     }
 }

@@ -62,4 +62,16 @@ public class FriendDetail extends BaseEntity {
     @Column(name = "IMAGE_FILE_ID")
     @Comment("친구 이미지 파일 ID")
     private Long imageFileId;
+
+    public void updateRelation(FriendRelation relation) {
+        this.relation = relation;
+    }
+
+    public void updateBirthday(LocalDate birthday) {
+        this.birthday = birthday;
+    }
+
+    public void updateMemo(String memo) {
+        this.memo = memo;
+    }
 }

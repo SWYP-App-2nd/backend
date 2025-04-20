@@ -44,4 +44,12 @@ public class FriendAnniversary extends BaseEntity {
     @Column(name = "DATE")
     @Comment("기념일 날짜")
     private LocalDate date;
+
+    public void updateTitle(String title) {
+        this.title = title;
+    }
+
+    public void updateDate(LocalDate date) {
+        this.date = date;
+    }
 }

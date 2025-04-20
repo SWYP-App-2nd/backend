@@ -7,6 +7,7 @@ import kr.swyp.backend.friend.dto.FriendDto.FriendCheckLogResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListRequest;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendDetailResponse;
+import kr.swyp.backend.friend.dto.FriendDto.FriendDetailUpdateRequest;
 import kr.swyp.backend.friend.dto.FriendDto.FriendListResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendPositionUpdateRequest;
 import kr.swyp.backend.friend.service.FriendService;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -92,6 +94,16 @@ public class FriendController {
             @PathVariable("friendId") UUID friendId) {
         FriendDetailResponse response = friendService.getFriendDetail(
                 memberDetails.getMemberId(), friendId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{friendId}")
+    public ResponseEntity<FriendDetailResponse> updateFriend(
+            @AuthenticationPrincipal MemberDetails memberDetails,
+            @PathVariable("friendId") UUID friendId,
+            @RequestBody FriendDetailUpdateRequest request) {
+        FriendDetailResponse response = friendService.updateFriend(
+                memberDetails.getMemberId(), friendId, request);
         return ResponseEntity.ok(response);
     }
 }

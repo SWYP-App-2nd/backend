@@ -6,6 +6,7 @@ import static org.springframework.restdocs.headers.HeaderDocumentation.requestHe
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.patch;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.put;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
@@ -36,6 +37,8 @@ import kr.swyp.backend.friend.domain.FriendDetail;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListRequest;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListRequest.FriendRequest;
 import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListRequest.FriendRequest.FriendAnniversaryCreateRequest;
+import kr.swyp.backend.friend.dto.FriendDto.FriendDetailUpdateRequest;
+import kr.swyp.backend.friend.dto.FriendDto.FriendDetailUpdateRequest.FriendAnniversaryDetailUpdateRequest;
 import kr.swyp.backend.friend.enums.FriendContactWeek;
 import kr.swyp.backend.friend.enums.FriendRelation;
 import kr.swyp.backend.friend.enums.FriendSource;
@@ -102,6 +105,7 @@ class FriendControllerTest {
             fieldWithPath("friendList[].contactFrequency").description("연락 주기"),
             fieldWithPath("friendList[].contactFrequency.contactWeek").description("연락 주기"),
             fieldWithPath("friendList[].contactFrequency.dayOfWeek").description("연락 요일"),
+            fieldWithPath("friendList[].anniversary.id").description("기념일 id"),
             fieldWithPath("friendList[].anniversary.title").description("기념일 제목"),
             fieldWithPath("friendList[].anniversary.date").description("기념일 날짜"),
             fieldWithPath("friendList[].nextContactAt").description("다음 연락 날짜"),
@@ -586,11 +590,115 @@ class FriendControllerTest {
                         fieldWithPath("relation").description("친구와의 관계"),
                         fieldWithPath("birthday").description("친구의 생일").optional(),
                         fieldWithPath("anniversaryList").description("기념일 목록"),
+                        fieldWithPath("anniversaryList[].id").description("기념일 id"),
                         fieldWithPath("anniversaryList[].title").description("기념일 제목"),
                         fieldWithPath("anniversaryList[].date").description("기념일 날짜"),
                         fieldWithPath("memo").description("친구에 대한 메모")
                 )));
     }
+
+    @Test
+    @DisplayName("친구를 업데이트 할 수 있어야 한다.")
+    void 친구를_업데이트_할_수_있어야_한다() throws Exception {
+        // given
+        UUID memberId = testMember.getMemberId();
+        String accessToken = createAccessToken(memberId);
+
+        // File 저장
+        File imageFile = fileRepository.save(File.builder()
+                .fileName("img")
+                .contentType("image/jpeg")
+                .fileSize(1024L)
+                .category("profile")
+                .build());
+
+        // Friend 저장
+        Friend friend = friendRepository.save(Friend.builder()
+                .memberId(memberId)
+                .position(1)
+                .name("friend1")
+                .friendSource(FriendSource.KAKAO)
+                .contactFrequency(FriendContactFrequency.builder()
+                        .contactWeek(FriendContactWeek.EVERY_WEEK)
+                        .dayOfWeek(DayOfWeek.MONDAY)
+                        .build())
+                .nextContactAt(LocalDate.now().plusDays(7))
+                .build());
+
+        // FriendDetail 저장
+        FriendDetail friendDetail = friendDetailRepository.save(FriendDetail.builder()
+                .friend(friend)
+                .relation(FriendRelation.FRIEND)
+                .imageFileId(imageFile.getId())
+                .build());
+
+        friend.addFriendDetail(friendDetail);
+
+        // FriendAnniversary 저장
+        FriendAnniversary friendAnniversary = friendAnniversaryRepository.save(
+                FriendAnniversary.builder()
+                        .friendId(friend.getFriendId())
+                        .date(LocalDate.now())
+                        .title("test")
+                        .build());
+
+        FriendDetailUpdateRequest request = FriendDetailUpdateRequest.builder()
+                .name("friend2")
+                .relation(FriendRelation.FRIEND)
+                .contactFrequency(FriendContactFrequency.builder()
+                        .contactWeek(FriendContactWeek.EVERY_DAY)
+                        .dayOfWeek(DayOfWeek.MONDAY)
+                        .build())
+                .birthday(LocalDate.of(1997, 11, 19))
+                .anniversaryList(List.of(FriendAnniversaryDetailUpdateRequest.builder()
+                        .id(friendAnniversary.getId())
+                        .title("test2")
+                        .date(LocalDate.of(1997, 11, 19))
+                        .build()))
+                .memo("test memo")
+                .build();
+
+        // when
+        ResultActions result = mockMvc.perform(put("/friend/{friendId}", friend.getFriendId())
+                .header(AUTHORIZATION_HEADER, AUTHORIZATION_VALUE_PREFIX + accessToken)
+                .content(objectMapper.writeValueAsString(request))
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.friendId").value(friend.getFriendId().toString()))
+                .andExpect(jsonPath("$.name").value("friend2"));
+
+        // docs
+        result.andDo(document("친구 상세 조회",
+                "특정 친구의 상세 정보를 조회한다.",
+                "친구 상세 정보 조회",
+                false,
+                false,
+                preprocessRequest(prettyPrint()),
+                preprocessResponse(prettyPrint()),
+                requestHeaders(
+                        headerWithName(AUTHORIZATION_HEADER).description("발급받은 JWT")
+                ),
+                pathParameters(
+                        parameterWithName("friendId").description("상세 조회할 친구의 UUID")
+                ),
+                responseFields(
+                        fieldWithPath("friendId").description("친구 ID"),
+                        fieldWithPath("name").description("친구 이름"),
+                        fieldWithPath("contactFrequency.contactWeek").description("연락 주기"),
+                        fieldWithPath("contactFrequency.dayOfWeek").description("연락 요일"),
+                        fieldWithPath("imageUrl").description("친구 프로필 이미지 URL"),
+                        fieldWithPath("relation").description("친구와의 관계"),
+                        fieldWithPath("birthday").description("친구의 생일").optional(),
+                        fieldWithPath("anniversaryList").description("기념일 목록"),
+                        fieldWithPath("anniversaryList[].id").description("기념일 id"),
+                        fieldWithPath("anniversaryList[].title").description("기념일 제목"),
+                        fieldWithPath("anniversaryList[].date").description("기념일 날짜"),
+                        fieldWithPath("memo").description("친구에 대한 메모")
+                )));
+    }
+
 
     private String createAccessToken(UUID memberId) {
         List<GrantedAuthority> authorities = Collections.singletonList(

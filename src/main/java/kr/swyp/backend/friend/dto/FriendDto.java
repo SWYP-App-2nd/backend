@@ -142,11 +142,13 @@ public class FriendDto {
             @Builder
             public static class FriendAnniversaryCreateResponse {
 
+                private Long id;
                 private String title;
                 private LocalDate date;
 
                 public static FriendAnniversaryCreateResponse fromEntity(FriendAnniversary entity) {
                     return FriendAnniversaryCreateResponse.builder()
+                            .id(entity.getId())
                             .title(entity.getTitle())
                             .date(entity.getDate())
                             .build();
@@ -222,11 +224,13 @@ public class FriendDto {
         @Builder
         public static class FriendAnniversaryDetailResponse {
 
+            private Long id;
             private String title;
             private LocalDate date;
 
             public static FriendAnniversaryDetailResponse fromEntity(FriendAnniversary entity) {
                 return FriendAnniversaryDetailResponse.builder()
+                        .id(entity.getId())
                         .title(entity.getTitle())
                         .date(entity.getDate())
                         .build();
@@ -247,6 +251,31 @@ public class FriendDto {
                             .toList())
                     .memo(detail.getMemo())
                     .build();
+        }
+    }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class FriendDetailUpdateRequest {
+
+        private String name;
+        private FriendRelation relation;
+        private FriendContactFrequency contactFrequency;
+        private LocalDate birthday;
+        private List<FriendAnniversaryDetailUpdateRequest> anniversaryList;
+        private String memo;
+
+        @Getter
+        @Builder
+        @AllArgsConstructor
+        @NoArgsConstructor
+        public static class FriendAnniversaryDetailUpdateRequest {
+
+            private Long id;
+            private String title;
+            private LocalDate date;
         }
     }
 }
