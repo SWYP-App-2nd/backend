@@ -96,6 +96,7 @@ class FriendControllerTest {
             fieldWithPath("friendList[].phone").description("전화번호"),
             fieldWithPath("friendList[].birthDay").description("생일"),
             fieldWithPath("friendList[].relation").description("관계"),
+            fieldWithPath("friendList[].memo").description("메모"),
     };
 
     private final FieldDescriptor[] friendInitResponseDescriptor = {
@@ -112,6 +113,7 @@ class FriendControllerTest {
             fieldWithPath("friendList[].preSignedImageUrl").description("프리사인드 이미지 URL"),
             fieldWithPath("friendList[].fileName").description("파일 이름"),
             fieldWithPath("friendList[].phone").description("전화번호"),
+            fieldWithPath("friendList[].memo").description("메모"),
     };
 
     private final FieldDescriptor[] friendListResponseDescriptor = new FieldDescriptor[]{
@@ -160,7 +162,7 @@ class FriendControllerTest {
 
     private Member testMember;
     private Friend testFriend;
-    private File testFile;
+
     @Autowired
     private FriendAnniversaryRepository friendAnniversaryRepository;
 
@@ -235,6 +237,7 @@ class FriendControllerTest {
                                                 .date(LocalDate.now())
                                                 .build())
                                         .phone("01000000000")
+                                        .memo("test")
                                         .build(),
                                 FriendRequest.builder()
                                         .name("test")
@@ -256,6 +259,7 @@ class FriendControllerTest {
                                                 .date(LocalDate.now())
                                                 .build())
                                         .phone("01000000000")
+                                        .memo("test")
                                         .build()
                         )).build();
 

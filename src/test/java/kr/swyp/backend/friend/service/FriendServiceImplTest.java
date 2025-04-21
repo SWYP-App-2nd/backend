@@ -62,6 +62,7 @@ class FriendServiceImplTest {
                                                 .date(LocalDate.now())
                                                 .build())
                                         .phone("01000000000")
+                                        .memo("test")
                                         .build(),
                                 FriendRequest.builder()
                                         .name("test")
@@ -83,6 +84,7 @@ class FriendServiceImplTest {
                                                 .date(LocalDate.now())
                                                 .build())
                                         .phone("01000000000")
+                                        .memo("test")
                                         .build()
                         )).build();
 

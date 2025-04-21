@@ -65,7 +65,8 @@ public class FriendServiceImpl implements FriendService {
                             .friend(friend)
                             .phone(friendRequest.getPhone())
                             .relation(friendRequest.getRelation())
-                            .birthday(friendRequest.getBirthDay());
+                            .birthday(friendRequest.getBirthDay())
+                            .memo(friendRequest.getMemo());
 
                     FriendResponseBuilder friendResponseBuilder = FriendResponse.builder()
                             .friendId(friend.getFriendId())
@@ -98,6 +99,10 @@ public class FriendServiceImpl implements FriendService {
                     if (friendRequest.getPhone() != null) {
                         friendResponseBuilder.phone(friend.getFriendDetail().getPhone());
                     }
+                    if (friendRequest.getMemo() != null) {
+                        friendResponseBuilder.memo(friend.getFriendDetail().getMemo());
+                    }
+                    
                     return friendResponseBuilder.build();
                 }).toList();
 

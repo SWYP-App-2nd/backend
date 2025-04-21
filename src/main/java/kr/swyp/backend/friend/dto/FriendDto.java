@@ -57,6 +57,8 @@ public class FriendDto {
 
             private FriendRelation relation;
 
+            private String memo;
+
             @Getter
             @Builder
             @AllArgsConstructor
@@ -136,6 +138,7 @@ public class FriendDto {
             private String phone;
             private String preSignedImageUrl;
             private String fileName;
+            private String memo;
             private FriendAnniversaryCreateResponse anniversary;
 
             @Getter
