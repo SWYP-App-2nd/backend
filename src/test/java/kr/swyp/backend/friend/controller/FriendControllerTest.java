@@ -670,9 +670,9 @@ class FriendControllerTest {
                 .andExpect(jsonPath("$.name").value("friend2"));
 
         // docs
-        result.andDo(document("친구 상세 조회",
-                "특정 친구의 상세 정보를 조회한다.",
-                "친구 상세 정보 조회",
+        result.andDo(document("친구 업데이트",
+                "특정 상세 정보를 업데이트 한다.",
+                "친구 업데이트",
                 false,
                 false,
                 preprocessRequest(prettyPrint()),
