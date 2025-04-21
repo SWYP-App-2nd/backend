@@ -102,7 +102,7 @@ public class FriendServiceImpl implements FriendService {
                     if (friendRequest.getMemo() != null) {
                         friendResponseBuilder.memo(friend.getFriendDetail().getMemo());
                     }
-                    
+
                     return friendResponseBuilder.build();
                 }).toList();
 
@@ -255,6 +255,12 @@ public class FriendServiceImpl implements FriendService {
 
         return FriendDetailResponse.fromEntity(friend, null, friendDetail,
                 friendAnniversaryList);
+    }
+
+    @Override
+    public void deleteFriend(UUID memberId, UUID friendId) {
+        friendAnniversaryRepository.deleteByFriendId(friendId);
+        friendRepository.deleteById(friendId);
     }
 }
 

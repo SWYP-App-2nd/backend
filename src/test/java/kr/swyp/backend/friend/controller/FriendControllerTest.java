@@ -3,6 +3,7 @@ package kr.swyp.backend.friend.controller;
 import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document;
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
 import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.delete;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.patch;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
@@ -717,6 +718,39 @@ class FriendControllerTest {
                         fieldWithPath("memo").description("친구에 대한 메모"),
                         fieldWithPath("phone").description("친구의 전화번호")
                 )));
+    }
+
+    @Test
+    @DisplayName("친구를 삭제할 수 있어야 한다.")
+    void 친구를_삭제할_수_있어야_한다() throws Exception {
+        // given
+        UUID memberId = testMember.getMemberId();
+        String accessToken = createAccessToken(memberId);
+
+        // when
+        ResultActions result = mockMvc.perform(
+                delete("/friend/{friendId}", testFriend.getFriendId())
+                        .header(AUTHORIZATION_HEADER, AUTHORIZATION_VALUE_PREFIX + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(status().isNoContent());
+
+        // docs
+        result.andDo(document("친구 삭제",
+                "특정 친구를 삭제한다.",
+                "친구 삭제",
+                false,
+                false,
+                preprocessRequest(prettyPrint()),
+                preprocessResponse(prettyPrint()),
+                requestHeaders(
+                        headerWithName(AUTHORIZATION_HEADER).description("발급받은 JWT")
+                ),
+                pathParameters(
+                        parameterWithName("friendId").description("삭제할 친구의 UUID")
+                )
+        ));
     }
 
 

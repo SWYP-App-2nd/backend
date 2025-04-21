@@ -80,4 +80,12 @@ public interface FriendService {
      */
     FriendDetailResponse updateFriend(UUID memberId, UUID friendId,
             FriendDetailUpdateRequest request);
+
+    /**
+     * 친구를 삭제합니다.
+     *
+     * @param memberId 회원 ID
+     * @param friendId 친구 ID
+     */
+    void deleteFriend(UUID memberId, UUID friendId);
 }
