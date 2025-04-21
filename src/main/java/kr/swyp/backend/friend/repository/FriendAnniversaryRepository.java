@@ -10,4 +10,6 @@ public interface FriendAnniversaryRepository extends JpaRepository<FriendAnniver
     List<FriendAnniversary> findByFriendId(UUID friendId);
 
     List<FriendAnniversary> findByIdIsIn(List<Long> ids);
+
+    void deleteByFriendId(UUID friendId);
 }

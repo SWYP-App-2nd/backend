@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -105,5 +106,13 @@ public class FriendController {
         FriendDetailResponse response = friendService.updateFriend(
                 memberDetails.getMemberId(), friendId, request);
         return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{friendId}")
+    public ResponseEntity<Void> deleteFriend(
+            @AuthenticationPrincipal MemberDetails memberDetails,
+            @PathVariable("friendId") UUID friendId) {
+        friendService.deleteFriend(memberDetails.getMemberId(), friendId);
+        return ResponseEntity.noContent().build();
     }
 }
