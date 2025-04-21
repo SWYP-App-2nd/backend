@@ -241,11 +241,12 @@ public class FriendServiceImpl implements FriendService {
         });
 
         FriendDetail friendDetail = friend.getFriendDetail();
-        
+
         // FriendDetail 업데이트
         friendDetail.updateRelation(request.getRelation());
         friendDetail.updateBirthday(request.getBirthday());
         friendDetail.updateMemo(request.getMemo());
+        friendDetail.updatePhone(request.getPhone());
 
         return FriendDetailResponse.fromEntity(friend, null, friendDetail,
                 friendAnniversaryList);

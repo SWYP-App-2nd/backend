@@ -74,4 +74,8 @@ public class FriendDetail extends BaseEntity {
     public void updateMemo(String memo) {
         this.memo = memo;
     }
+
+    public void updatePhone(String phone) {
+        this.phone = phone;
+    }
 }

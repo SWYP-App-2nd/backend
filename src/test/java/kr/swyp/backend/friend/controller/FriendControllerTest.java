@@ -593,7 +593,8 @@ class FriendControllerTest {
                         fieldWithPath("anniversaryList[].id").description("기념일 id"),
                         fieldWithPath("anniversaryList[].title").description("기념일 제목"),
                         fieldWithPath("anniversaryList[].date").description("기념일 날짜"),
-                        fieldWithPath("memo").description("친구에 대한 메모")
+                        fieldWithPath("memo").description("친구에 대한 메모"),
+                        fieldWithPath("phone").description("친구의 전화번호")
                 )));
     }
 
@@ -629,6 +630,7 @@ class FriendControllerTest {
         FriendDetail friendDetail = friendDetailRepository.save(FriendDetail.builder()
                 .friend(friend)
                 .relation(FriendRelation.FRIEND)
+                .phone("01000000000")
                 .imageFileId(imageFile.getId())
                 .build());
 
@@ -656,6 +658,7 @@ class FriendControllerTest {
                         .date(LocalDate.of(1997, 11, 19))
                         .build()))
                 .memo("test memo")
+                .phone("01011111111")
                 .build();
 
         // when
@@ -683,6 +686,18 @@ class FriendControllerTest {
                 pathParameters(
                         parameterWithName("friendId").description("상세 조회할 친구의 UUID")
                 ),
+                requestFields(
+                        fieldWithPath("name").description("친구 이름"),
+                        fieldWithPath("relation").description("친구와의 관계"),
+                        fieldWithPath("contactFrequency.contactWeek").description("연락 주기"),
+                        fieldWithPath("contactFrequency.dayOfWeek").description("연락 요일"),
+                        fieldWithPath("birthday").description("친구의 생일").optional(),
+                        fieldWithPath("anniversaryList[].id").description("기념일 id"),
+                        fieldWithPath("anniversaryList[].title").description("기념일 제목"),
+                        fieldWithPath("anniversaryList[].date").description("기념일 날짜"),
+                        fieldWithPath("memo").description("친구에 대한 메모"),
+                        fieldWithPath("phone").description("친구의 전화번호")
+                ),
                 responseFields(
                         fieldWithPath("friendId").description("친구 ID"),
                         fieldWithPath("name").description("친구 이름"),
@@ -695,7 +710,8 @@ class FriendControllerTest {
                         fieldWithPath("anniversaryList[].id").description("기념일 id"),
                         fieldWithPath("anniversaryList[].title").description("기념일 제목"),
                         fieldWithPath("anniversaryList[].date").description("기념일 날짜"),
-                        fieldWithPath("memo").description("친구에 대한 메모")
+                        fieldWithPath("memo").description("친구에 대한 메모"),
+                        fieldWithPath("phone").description("친구의 전화번호")
                 )));
     }
 

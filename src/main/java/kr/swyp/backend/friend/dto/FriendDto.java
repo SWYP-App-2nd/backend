@@ -219,6 +219,7 @@ public class FriendDto {
         private LocalDate birthday;
         private List<FriendAnniversaryDetailResponse> anniversaryList;
         private String memo;
+        private String phone;
 
         @Getter
         @Builder
@@ -250,6 +251,7 @@ public class FriendDto {
                             .map(FriendAnniversaryDetailResponse::fromEntity)
                             .toList())
                     .memo(detail.getMemo())
+                    .phone(detail.getPhone())
                     .build();
         }
     }
@@ -266,6 +268,7 @@ public class FriendDto {
         private LocalDate birthday;
         private List<FriendAnniversaryDetailUpdateRequest> anniversaryList;
         private String memo;
+        private String phone;
 
         @Getter
         @Builder
