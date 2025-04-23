@@ -258,6 +258,7 @@ public class FriendServiceImpl implements FriendService {
     }
 
     @Override
+    @Transactional
     public void deleteFriend(UUID memberId, UUID friendId) {
         friendAnniversaryRepository.deleteByFriendId(friendId);
         friendRepository.deleteById(friendId);
