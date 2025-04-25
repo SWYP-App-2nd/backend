@@ -1,5 +1,6 @@
 package kr.swyp.backend.friend.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -224,37 +225,76 @@ public class FriendServiceImpl implements FriendService {
         Friend friend = friendRepository.findByFriendIdAndMemberId(friendId, memberId)
                 .orElseThrow(() -> new NoSuchElementException("해당 친구를 찾을 수 없습니다."));
 
-        List<FriendAnniversary> friendAnniversaryList = friendAnniversaryRepository
-                .findByIdIsIn(request.getAnniversaryList().stream()
-                        .map(FriendAnniversaryDetailUpdateRequest::getId)
-                        .toList());
-
         // Friend 업데이트
         friend.updateName(request.getName());
         friend.updateFriendContactFrequency(request.getContactFrequency());
 
-        // FriendAnniversaryList 업데이트
-        request.getAnniversaryList().forEach(anniversaryRequest -> {
-            FriendAnniversary anniversaryToUpdate = friendAnniversaryList.stream()
-                    .filter(anniversary -> anniversary.getId().equals(anniversaryRequest.getId()))
-                    .findFirst()
-                    .orElseThrow(() -> new NoSuchElementException("해당 기념일을 찾을 수 없습니다."));
-
-            // 기념일 정보 업데이트
-            anniversaryToUpdate.updateDate(anniversaryRequest.getDate());
-            anniversaryToUpdate.updateTitle(anniversaryRequest.getTitle());
-        });
-
-        FriendDetail friendDetail = friend.getFriendDetail();
-
         // FriendDetail 업데이트
+        FriendDetail friendDetail = friend.getFriendDetail();
         friendDetail.updateRelation(request.getRelation());
         friendDetail.updateBirthday(request.getBirthday());
         friendDetail.updateMemo(request.getMemo());
         friendDetail.updatePhone(request.getPhone());
 
-        return FriendDetailResponse.fromEntity(friend, null, friendDetail,
-                friendAnniversaryList);
+        // AnniversaryList 처리
+        List<FriendAnniversary> friendAnniversaryList = processAnniversaries(friendId,
+                request.getAnniversaryList());
+
+        return FriendDetailResponse.fromEntity(friend, null, friendDetail, friendAnniversaryList);
+    }
+
+    private List<FriendAnniversary> processAnniversaries(UUID friendId,
+            List<FriendAnniversaryDetailUpdateRequest> anniversaryRequests) {
+        if (anniversaryRequests == null || anniversaryRequests.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // 새로운 기념일과 기존 기념일 분리
+        List<FriendAnniversaryDetailUpdateRequest> existingAnniversaries =
+                anniversaryRequests.stream()
+                        .filter(req -> req.getId() != null)
+                        .toList();
+
+        List<FriendAnniversaryDetailUpdateRequest> newAnniversaries = anniversaryRequests.stream()
+                .filter(req -> req.getId() == null)
+                .toList();
+
+        List<FriendAnniversary> result = new ArrayList<>();
+
+        // 기존 기념일 업데이트
+        if (!existingAnniversaries.isEmpty()) {
+            List<FriendAnniversary> existingList = friendAnniversaryRepository
+                    .findByIdIsIn(existingAnniversaries.stream()
+                            .map(FriendAnniversaryDetailUpdateRequest::getId)
+                            .toList());
+
+            existingAnniversaries.forEach(request -> {
+                FriendAnniversary anniversary = existingList.stream()
+                        .filter(a -> a.getId().equals(request.getId()))
+                        .findFirst()
+                        .orElseThrow(() -> new NoSuchElementException("해당 기념일을 찾을 수 없습니다."));
+
+                anniversary.updateDate(request.getDate());
+                anniversary.updateTitle(request.getTitle());
+            });
+
+            result.addAll(existingList);
+        }
+
+        // 새 기념일 생성
+        if (!newAnniversaries.isEmpty()) {
+            List<FriendAnniversary> newList = newAnniversaries.stream()
+                    .map(request -> FriendAnniversary.builder()
+                            .friendId(friendId)
+                            .title(request.getTitle())
+                            .date(request.getDate())
+                            .build())
+                    .toList();
+
+            result.addAll(friendAnniversaryRepository.saveAll(newList));
+        }
+
+        return result;
     }
 
     @Override
