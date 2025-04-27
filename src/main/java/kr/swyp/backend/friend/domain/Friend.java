@@ -12,12 +12,14 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import kr.swyp.backend.common.domain.BaseEntity;
 import kr.swyp.backend.friend.domain.converter.FriendContactFrequencyConverter;
+import kr.swyp.backend.friend.enums.FriendContactWeek;
 import kr.swyp.backend.friend.enums.FriendSource;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -116,6 +118,40 @@ public class Friend extends BaseEntity {
 
     public void updateFriendContactFrequency(FriendContactFrequency friendContactFrequency) {
         this.contactFrequency = friendContactFrequency;
+    }
+
+    public void updateNextContactAt() {
+        LocalDate now = LocalDate.now();
+        DayOfWeek targetDayOfWeek = contactFrequency.getDayOfWeek();
+
+        LocalDate calculatedDate = switch (contactFrequency.getContactWeek()) {
+            case EVERY_DAY -> now.plusDays(1);
+            case EVERY_WEEK -> now.plusWeeks(1);
+            case EVERY_TWO_WEEK -> now.plusWeeks(2);
+            case EVERY_MONTH -> now.plusMonths(1);
+            case EVERY_SIX_MONTH -> now.plusMonths(6);
+            default ->
+                    throw new IllegalArgumentException("연락 챙김 주기가 올바르지 않습니다," + contactFrequency);
+        };
+
+        // 매일 주기가 아닌 경우 특정 요일로 조정
+        if (contactFrequency.getContactWeek() != FriendContactWeek.EVERY_DAY
+                && targetDayOfWeek != null) {
+            // 계산된 날짜의 요일
+            DayOfWeek calculatedDayOfWeek = calculatedDate.getDayOfWeek();
+
+            // 목표 요일까지 날짜 조정 (요일 간의 차이를 계산)
+            int daysToAdd = targetDayOfWeek.getValue() - calculatedDayOfWeek.getValue();
+
+            // 음수인 경우 다음 주로 이동
+            if (daysToAdd < 0) {
+                daysToAdd += 7;
+            }
+
+            // 요일 조정
+            calculatedDate = calculatedDate.plusDays(daysToAdd);
+        }
+        this.nextContactAt = calculatedDate;
     }
 }
 

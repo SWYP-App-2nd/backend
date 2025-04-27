@@ -134,6 +134,7 @@ public class FriendServiceImpl implements FriendService {
 
         // 체크율 업데이트
         friend.updateCheckRate(checkRate);
+        friend.updateNextContactAt();
         friendRepository.save(friend);
     }
 
