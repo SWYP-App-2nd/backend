@@ -8,6 +8,7 @@ import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendDetailResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendDetailUpdateRequest;
 import kr.swyp.backend.friend.dto.FriendDto.FriendListResponse;
+import kr.swyp.backend.friend.dto.FriendDto.FriendNearResponse;
 
 public interface FriendService {
 
@@ -88,4 +89,12 @@ public interface FriendService {
      * @param friendId 친구 ID
      */
     void deleteFriend(UUID memberId, UUID friendId);
+
+    /**
+     * 이번 달 챙길 사람 리스트를 반합니다.
+     *
+     * @param memberId 회원 ID
+     * @return 이번 달 챙길 사람 리스트 응답
+     */
+    List<FriendNearResponse> getMonthlyFriendNearList(UUID memberId);
 }

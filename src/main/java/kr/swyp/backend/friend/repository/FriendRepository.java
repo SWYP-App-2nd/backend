@@ -28,5 +28,7 @@ public interface FriendRepository extends JpaRepository<Friend, UUID> {
             ORDER BY f.position ASC
             """)
     List<Friend> findAllByMemberIdWithDetail(@Param("memberId") UUID memberId);
+
+    List<Friend> findAllByMemberId(UUID memberId);
 }
 

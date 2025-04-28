@@ -25,8 +25,10 @@ import kr.swyp.backend.friend.dto.FriendDto.FriendDetailResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendDetailUpdateRequest;
 import kr.swyp.backend.friend.dto.FriendDto.FriendDetailUpdateRequest.FriendAnniversaryDetailUpdateRequest;
 import kr.swyp.backend.friend.dto.FriendDto.FriendListResponse;
+import kr.swyp.backend.friend.dto.FriendDto.FriendNearResponse;
 import kr.swyp.backend.friend.repository.FriendAnniversaryRepository;
 import kr.swyp.backend.friend.repository.FriendCheckingLogRepository;
+import kr.swyp.backend.friend.repository.FriendDetailRepository;
 import kr.swyp.backend.friend.repository.FriendRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -41,6 +43,7 @@ public class FriendServiceImpl implements FriendService {
     private final FriendAnniversaryRepository friendAnniversaryRepository;
     private final FriendCheckingLogRepository friendCheckingLogRepository;
     private final FileRepository fileRepository;
+    private final FriendDetailRepository friendDetailRepository;
 
     @Override
     @Transactional
@@ -308,6 +311,61 @@ public class FriendServiceImpl implements FriendService {
     public void deleteFriend(UUID memberId, UUID friendId) {
         friendAnniversaryRepository.deleteByFriendId(friendId);
         friendRepository.deleteById(friendId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<FriendNearResponse> getMonthlyFriendNearList(UUID memberId) {
+        List<FriendDetail> friendDetailList = friendDetailRepository.findByFriend_MemberId(
+                memberId);
+
+        // 친구 ID 목록 추출
+        List<UUID> friendIdList = friendRepository.findAllByMemberId(memberId)
+                .stream()
+                .map(Friend::getFriendId)
+                .toList();
+
+        // 기념일 목록 조회
+        List<FriendAnniversary> friendAnniversaryList = friendAnniversaryRepository
+                .findByFriendIdIsIn(friendIdList);
+
+        // 친구 상세 정보로부터 응답 객체 생성
+        List<FriendNearResponse> birthdayResponses = friendDetailList.stream()
+                .filter(detail -> detail.getBirthday() != null)
+                .map(detail -> {
+                    Friend friend = detail.getFriend();
+                    return FriendNearResponse.builder()
+                            .friendId(friend.getFriendId())
+                            .name(friend.getName())
+                            .type("birthday") // 생일 타입 설정
+                            .nextContactAt(friend.getNextContactAt())
+                            .build();
+                })
+                .toList();
+
+        // 기념일 정보로부터 응답 객체 생성
+        List<FriendNearResponse> anniversaryResponses = friendAnniversaryList.stream()
+                .map(anniversary -> {
+                    // 해당 기념일의 친구 찾기
+                    Friend friend = friendRepository.findById(anniversary.getFriendId())
+                            .orElseThrow(() -> new NoSuchElementException(
+                                    "친구를 찾을 수 없습니다: " + anniversary.getFriendId()));
+
+                    return FriendNearResponse.builder()
+                            .friendId(anniversary.getFriendId())
+                            .name(friend.getName())
+                            .type(anniversary.getTitle()) // 기념일 제목을 타입으로 설정
+                            .nextContactAt(friend.getNextContactAt())
+                            .build();
+                })
+                .toList();
+
+        // 두 리스트 합치기
+        List<FriendNearResponse> result = new ArrayList<>();
+        result.addAll(birthdayResponses);
+        result.addAll(anniversaryResponses);
+
+        return result;
     }
 }
 
