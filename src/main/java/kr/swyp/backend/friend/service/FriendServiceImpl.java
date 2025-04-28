@@ -215,8 +215,13 @@ public class FriendServiceImpl implements FriendService {
         List<FriendAnniversary> friendAnniversaryList = friendAnniversaryRepository
                 .findByFriendId(friend.getFriendId());
 
+        FriendCheckingLog friendCheckingLog =
+                friendCheckingLogRepository
+                        .findFirstByFriend_FriendIdAndIsCheckedTrueOrderByCreatedAtDesc(friendId)
+                        .orElse(null);
+
         return FriendDetailResponse.fromEntity(friend, imageUrl, friend.getFriendDetail(),
-                friendAnniversaryList);
+                friendAnniversaryList, friendCheckingLog);
     }
 
     @Override

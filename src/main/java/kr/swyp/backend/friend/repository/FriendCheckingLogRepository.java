@@ -1,6 +1,7 @@
 package kr.swyp.backend.friend.repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import kr.swyp.backend.friend.domain.FriendCheckingLog;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,4 +20,6 @@ public interface FriendCheckingLogRepository extends JpaRepository<FriendCheckin
 
     List<FriendCheckingLog> findByFriend_FriendId(UUID friendId);
 
+    Optional<FriendCheckingLog> findFirstByFriend_FriendIdAndIsCheckedTrueOrderByCreatedAtDesc(
+            UUID friendId);
 }

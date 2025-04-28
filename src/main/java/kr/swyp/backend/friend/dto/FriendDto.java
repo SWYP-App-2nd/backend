@@ -223,6 +223,7 @@ public class FriendDto {
         private List<FriendAnniversaryDetailResponse> anniversaryList;
         private String memo;
         private String phone;
+        private LocalDate lastContactAt;
 
         @Getter
         @Builder
@@ -239,6 +240,27 @@ public class FriendDto {
                         .date(entity.getDate())
                         .build();
             }
+        }
+
+        public static FriendDetailResponse fromEntity(Friend friend, String imageUrl,
+                FriendDetail detail, List<FriendAnniversary> friendAnniversaryList,
+                FriendCheckingLog friendCheckingLog) {
+            return FriendDetailResponse.builder()
+                    .friendId(friend.getFriendId())
+                    .imageUrl(imageUrl)
+                    .relation(detail.getRelation())
+                    .name(friend.getName())
+                    .contactFrequency(friend.getContactFrequency())
+                    .birthday(detail.getBirthday())
+                    .anniversaryList(friendAnniversaryList.stream()
+                            .map(FriendAnniversaryDetailResponse::fromEntity)
+                            .toList())
+                    .memo(detail.getMemo())
+                    .phone(detail.getPhone())
+                    .lastContactAt(
+                            friendCheckingLog != null ? friendCheckingLog.getCreatedAt()
+                                    .toLocalDate() : null)
+                    .build();
         }
 
         public static FriendDetailResponse fromEntity(Friend friend, String imageUrl,
