@@ -97,4 +97,12 @@ public interface FriendService {
      * @return 이번 달 챙길 사람 리스트 응답
      */
     List<FriendNearResponse> getMonthlyFriendNearList(UUID memberId);
+
+    /**
+     * 이번 달 챙김 완료한 사람 리스트를 반환합니다.
+     *
+     * @param memberId 회원 ID
+     * @return 이번 달 챙김 완료한 사람 리스트 응답
+     */
+    List<FriendNearResponse> getMonthlyCompleteFriendNearList(UUID memberId);
 }

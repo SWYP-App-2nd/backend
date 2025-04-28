@@ -1,5 +1,6 @@
 package kr.swyp.backend.friend.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -8,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+@SuppressWarnings("checkstyle:LineLength")
 public interface FriendCheckingLogRepository extends JpaRepository<FriendCheckingLog, Long> {
 
     @Query("""
@@ -22,4 +24,7 @@ public interface FriendCheckingLogRepository extends JpaRepository<FriendCheckin
 
     Optional<FriendCheckingLog> findFirstByFriend_FriendIdAndIsCheckedTrueOrderByCreatedAtDesc(
             UUID friendId);
+
+    List<FriendCheckingLog> findAllByFriend_FriendIdIsInAndIsCheckedTrueAndCreatedAtBetweenOrderByCreatedAtDesc(
+            List<UUID> friendIdList, LocalDateTime startDateTime, LocalDateTime endDateTime);
 }

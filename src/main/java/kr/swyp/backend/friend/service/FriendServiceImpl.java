@@ -1,5 +1,7 @@
 package kr.swyp.backend.friend.service;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -316,8 +318,12 @@ public class FriendServiceImpl implements FriendService {
     @Override
     @Transactional(readOnly = true)
     public List<FriendNearResponse> getMonthlyFriendNearList(UUID memberId) {
-        List<FriendDetail> friendDetailList = friendDetailRepository.findByFriend_MemberId(
-                memberId);
+        LocalDate now = LocalDate.now();
+        List<FriendDetail> friendDetailList = friendDetailRepository
+                .findAllByFriend_MemberIdAndBirthdayBetween(
+                        memberId,
+                        now.withDayOfMonth(1),
+                        now.withDayOfMonth(now.lengthOfMonth()));
 
         // 친구 ID 목록 추출
         List<UUID> friendIdList = friendRepository.findAllByMemberId(memberId)
@@ -327,10 +333,14 @@ public class FriendServiceImpl implements FriendService {
 
         // 기념일 목록 조회
         List<FriendAnniversary> friendAnniversaryList = friendAnniversaryRepository
-                .findByFriendIdIsIn(friendIdList);
+                .findAllByFriendIdIsInAndCreatedAtBetween(friendIdList,
+                        now.withDayOfMonth(1).atStartOfDay(),
+                        now.withDayOfMonth(now.lengthOfMonth())
+                                .atTime(LocalTime.of(23, 59, 59)));
 
         // 친구 상세 정보로부터 응답 객체 생성
-        List<FriendNearResponse> birthdayResponses = friendDetailList.stream()
+        List<FriendNearResponse> birthdayResponses = friendDetailList
+                .stream()
                 .filter(detail -> detail.getBirthday() != null)
                 .map(detail -> {
                     Friend friend = detail.getFriend();
@@ -344,7 +354,80 @@ public class FriendServiceImpl implements FriendService {
                 .toList();
 
         // 기념일 정보로부터 응답 객체 생성
-        List<FriendNearResponse> anniversaryResponses = friendAnniversaryList.stream()
+        List<FriendNearResponse> anniversaryResponses = friendAnniversaryList
+                .stream()
+                .map(anniversary -> {
+                    // 해당 기념일의 친구 찾기
+                    Friend friend = friendRepository.findById(anniversary.getFriendId())
+                            .orElseThrow(() -> new NoSuchElementException(
+                                    "친구를 찾을 수 없습니다: " + anniversary.getFriendId()));
+
+                    return FriendNearResponse.builder()
+                            .friendId(anniversary.getFriendId())
+                            .name(friend.getName())
+                            .type(anniversary.getTitle()) // 기념일 제목을 타입으로 설정
+                            .nextContactAt(friend.getNextContactAt())
+                            .build();
+                })
+                .toList();
+
+        // 두 리스트 합치기
+        List<FriendNearResponse> result = new ArrayList<>();
+        result.addAll(birthdayResponses);
+        result.addAll(anniversaryResponses);
+
+        return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @SuppressWarnings("checkstyle:LineLength")
+    public List<FriendNearResponse> getMonthlyCompleteFriendNearList(UUID memberId) {
+        LocalDate now = LocalDate.now();
+
+        List<FriendDetail> friendDetailList = friendDetailRepository
+                .findBirthdaysWithCheckedLogs(
+                        memberId,
+                        now.withDayOfMonth(1),
+                        now.withDayOfMonth(now.lengthOfMonth()));
+
+        List<UUID> friendIdList = friendRepository.findAllByMemberId(memberId)
+                .stream()
+                .map(Friend::getFriendId)
+                .toList();
+
+        List<Long> friendCheckingLogIdList = friendCheckingLogRepository
+                .findAllByFriend_FriendIdIsInAndIsCheckedTrueAndCreatedAtBetweenOrderByCreatedAtDesc(
+                        friendIdList,
+                        now.withDayOfMonth(1).atStartOfDay(),
+                        now.withDayOfMonth(now.lengthOfMonth())
+                                .atTime(LocalTime.of(23, 59, 59)))
+                .stream()
+                .map(FriendCheckingLog::getId)
+                .toList();
+
+        List<FriendAnniversary> friendAnniversaryList =
+                friendAnniversaryRepository.findAllAnniversaryByCheckingLogIdList(
+                        friendCheckingLogIdList);
+
+        // 친구 상세 정보로부터 응답 객체 생성
+        List<FriendNearResponse> birthdayResponses = friendDetailList
+                .stream()
+                .filter(detail -> detail.getBirthday() != null)
+                .map(detail -> {
+                    Friend friend = detail.getFriend();
+                    return FriendNearResponse.builder()
+                            .friendId(friend.getFriendId())
+                            .name(friend.getName())
+                            .type("birthday") // 생일 타입 설정
+                            .nextContactAt(friend.getNextContactAt())
+                            .build();
+                })
+                .toList();
+
+        // 기념일 정보로부터 응답 객체 생성
+        List<FriendNearResponse> anniversaryResponses = friendAnniversaryList
+                .stream()
                 .map(anniversary -> {
                     // 해당 기념일의 친구 찾기
                     Friend friend = friendRepository.findById(anniversary.getFriendId())

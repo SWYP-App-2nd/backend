@@ -124,4 +124,13 @@ public class FriendController {
         List<FriendNearResponse> friendList = friendService.getMonthlyFriendNearList(memberId);
         return ResponseEntity.ok(friendList);
     }
+
+    @GetMapping("/monthly/complete")
+    public ResponseEntity<List<FriendNearResponse>> getMonthlyCompleteFriendNearList(
+            @AuthenticationPrincipal MemberDetails memberDetails) {
+        UUID memberId = memberDetails.getMemberId();
+        List<FriendNearResponse> friendList = friendService.getMonthlyCompleteFriendNearList(
+                memberId);
+        return ResponseEntity.ok(friendList);
+    }
 }
