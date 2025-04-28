@@ -306,4 +306,14 @@ public class FriendDto {
             private LocalDate date;
         }
     }
+
+    @Getter
+    @Builder
+    public static class FriendNearResponse {
+
+        private UUID friendId;
+        private String name;
+        private String type;
+        private LocalDate nextContactAt;
+    }
 }

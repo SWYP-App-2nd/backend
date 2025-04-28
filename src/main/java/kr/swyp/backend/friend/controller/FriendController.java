@@ -9,6 +9,7 @@ import kr.swyp.backend.friend.dto.FriendDto.FriendCreateListResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendDetailResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendDetailUpdateRequest;
 import kr.swyp.backend.friend.dto.FriendDto.FriendListResponse;
+import kr.swyp.backend.friend.dto.FriendDto.FriendNearResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendPositionUpdateRequest;
 import kr.swyp.backend.friend.service.FriendService;
 import kr.swyp.backend.member.dto.MemberDetails;
@@ -114,5 +115,22 @@ public class FriendController {
             @PathVariable("friendId") UUID friendId) {
         friendService.deleteFriend(memberDetails.getMemberId(), friendId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/monthly")
+    public ResponseEntity<List<FriendNearResponse>> getMonthlyFriendNearList(
+            @AuthenticationPrincipal MemberDetails memberDetails) {
+        UUID memberId = memberDetails.getMemberId();
+        List<FriendNearResponse> friendList = friendService.getMonthlyFriendNearList(memberId);
+        return ResponseEntity.ok(friendList);
+    }
+
+    @GetMapping("/monthly/complete")
+    public ResponseEntity<List<FriendNearResponse>> getMonthlyCompleteFriendNearList(
+            @AuthenticationPrincipal MemberDetails memberDetails) {
+        UUID memberId = memberDetails.getMemberId();
+        List<FriendNearResponse> friendList = friendService.getMonthlyCompleteFriendNearList(
+                memberId);
+        return ResponseEntity.ok(friendList);
     }
 }

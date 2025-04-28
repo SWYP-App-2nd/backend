@@ -755,6 +755,161 @@ class FriendControllerTest {
         ));
     }
 
+    @Test
+    @DisplayName("이번 달 챙길 친구 목록을 성공적으로 조회해야 한다.")
+    void 이번_달_챙길_친구_목록을_성공적으로_조회해야_한다() throws Exception {
+        // given
+        UUID memberId = testMember.getMemberId();
+        String accessToken = createAccessToken(memberId);
+
+        // File 저장
+        File imageFile = fileRepository.save(File.builder()
+                .fileName("img")
+                .contentType("image/jpeg")
+                .fileSize(1024L)
+                .category("profile")
+                .build());
+
+        // Friend 저장
+        Friend friend = friendRepository.save(Friend.builder()
+                .memberId(memberId)
+                .position(1)
+                .name("friend1")
+                .friendSource(FriendSource.KAKAO)
+                .contactFrequency(FriendContactFrequency.builder()
+                        .contactWeek(FriendContactWeek.EVERY_WEEK)
+                        .dayOfWeek(DayOfWeek.MONDAY)
+                        .build())
+                .nextContactAt(LocalDate.now().plusDays(7))
+                .build());
+
+        // FriendDetail 저장 (생일 포함)
+        FriendDetail friendDetail = friendDetailRepository.save(FriendDetail.builder()
+                .friend(friend)
+                .relation(FriendRelation.FRIEND)
+                .birthday(LocalDate.now().plusDays(5))
+                .imageFileId(imageFile.getId())
+                .build());
+
+        friend.addFriendDetail(friendDetail);
+
+        // FriendAnniversary 저장
+        friendAnniversaryRepository.save(
+                FriendAnniversary.builder()
+                        .friendId(friend.getFriendId())
+                        .date(LocalDate.now().plusDays(3))
+                        .title("결혼기념일")
+                        .build());
+
+        // when
+        ResultActions result = mockMvc.perform(get("/friend/monthly")
+                .header(AUTHORIZATION_HEADER, AUTHORIZATION_VALUE_PREFIX + accessToken)
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].friendId").exists())
+                .andExpect(jsonPath("$[0].name").value("friend1"))
+                .andExpect(jsonPath("$[0].type").exists())
+                .andExpect(jsonPath("$[0].nextContactAt").exists());
+
+        // docs
+        result.andDo(document("이번 달 챙길 친구 목록 조회",
+                "이번 달에 챙겨야 할 친구 목록을 조회한다.",
+                "생일이나 기념일이 이번 달에 있는 친구 목록을 조회한다.",
+                false,
+                false,
+                preprocessRequest(prettyPrint()),
+                preprocessResponse(prettyPrint()),
+                requestHeaders(
+                        headerWithName(AUTHORIZATION_HEADER).description("발급받은 JWT")
+                ),
+                responseFields(
+                        fieldWithPath("[].friendId").description("친구 ID"),
+                        fieldWithPath("[].name").description("친구 이름"),
+                        fieldWithPath("[].type").description("유형 (birthday 또는 기념일 제목)"),
+                        fieldWithPath("[].nextContactAt").description("다음 연락 예정일")
+                )
+        ));
+    }
+
+    @Test
+    @DisplayName("이번 달 챙김 완료한 친구 목록을 성공적으로 조회해야 한다.")
+    void 이번_달_챙김_완료한_친구_목록을_성공적으로_조회해야_한다() throws Exception {
+        // given
+        // 테스트 데이터 준비
+        Friend friend = Friend.builder()
+                .memberId(testMember.getMemberId())
+                .name("테스트 친구")
+                .friendSource(FriendSource.APPLE)
+                .contactFrequency(FriendContactFrequency.builder()
+                        .contactWeek(FriendContactWeek.EVERY_MONTH)
+                        .dayOfWeek(DayOfWeek.MONDAY)
+                        .build())
+                .position(1)
+                .nextContactAt(LocalDate.now().plusDays(7))
+                .build();
+
+        friendRepository.save(friend);
+
+        // 친구 상세 정보 추가 (생일 포함)
+        FriendDetail friendDetail = FriendDetail.builder()
+                .friend(friend)
+                .relation(FriendRelation.FRIEND)
+                .birthday(LocalDate.now().minusYears(30))
+                .memo("테스트 메모")
+                .build();
+        friend.addFriendDetail(friendDetail);
+        friendDetailRepository.save(friendDetail);
+
+        // 기념일 추가
+        FriendAnniversary anniversary = FriendAnniversary.builder()
+                .friendId(friend.getFriendId())
+                .title("결혼기념일")
+                .date(LocalDate.now().minusYears(5))
+                .build();
+        friendAnniversaryRepository.save(anniversary);
+
+        // 체크 로그 추가 (isChecked = true)
+        FriendCheckingLog checkingLog = FriendCheckingLog.of(friend, true);
+        friendCheckingLogRepository.save(checkingLog);
+
+        String accessToken = createAccessToken(testMember.getMemberId());
+
+        // when
+        ResultActions result = mockMvc.perform(get(url + "/monthly/complete")
+                        .header(AUTHORIZATION_HEADER, AUTHORIZATION_VALUE_PREFIX + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        // then
+        result.andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").isNumber())
+                .andExpect(jsonPath("$[0].friendId").exists())
+                .andExpect(jsonPath("$[0].name").value("테스트 친구"))
+                .andExpect(jsonPath("$[0].type").exists())
+                .andExpect(jsonPath("$[0].nextContactAt").exists());
+
+        // docs
+        result.andDo(document("이번 달 챙김 완료한 친구 목록 조회 성공",
+                "이번 달 챙김 완료한 친구 목록(생일 및 기념일)을 조회한다.",
+                "이번 달에 챙김 표시가 된 친구들의 생일 및 기념일 정보를 반환한다.",
+                false,
+                false,
+                preprocessRequest(prettyPrint()),
+                preprocessResponse(prettyPrint()),
+                requestHeaders(
+                        headerWithName(AUTHORIZATION_HEADER).description("발급받은 JWT")
+                ),
+                responseFields(
+                        fieldWithPath("[].friendId").description("친구 ID"),
+                        fieldWithPath("[].name").description("친구 이름"),
+                        fieldWithPath("[].type").description("챙김 타입 (birthday 또는 기념일 제목)"),
+                        fieldWithPath("[].nextContactAt").description("다음 연락 예정일")
+                )
+        ));
+    }
 
     private String createAccessToken(UUID memberId) {
         List<GrantedAuthority> authorities = Collections.singletonList(
