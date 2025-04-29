@@ -1,6 +1,6 @@
 package kr.swyp.backend.friend.repository;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import kr.swyp.backend.friend.domain.FriendAnniversary;
@@ -14,8 +14,8 @@ public interface FriendAnniversaryRepository extends JpaRepository<FriendAnniver
 
     List<FriendAnniversary> findByIdIsIn(List<Long> idList);
 
-    List<FriendAnniversary> findAllByFriendIdIsInAndCreatedAtBetween(List<UUID> friendIds,
-            LocalDateTime createdAtAfter, LocalDateTime createdAtBefore);
+    List<FriendAnniversary> findAllByFriendIdIsInAndDateBetween(List<UUID> friendIds,
+            LocalDate dateAfter, LocalDate dateBefore);
 
     void deleteByFriendId(UUID friendId);
 

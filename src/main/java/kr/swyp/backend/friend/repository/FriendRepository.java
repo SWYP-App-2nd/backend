@@ -1,6 +1,8 @@
 package kr.swyp.backend.friend.repository;
 
 import feign.Param;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,5 +32,22 @@ public interface FriendRepository extends JpaRepository<Friend, UUID> {
     List<Friend> findAllByMemberIdWithDetail(@Param("memberId") UUID memberId);
 
     List<Friend> findAllByMemberId(UUID memberId);
+
+    List<Friend> findAllByMemberIdAndNextContactAtBetween(UUID memberId, LocalDate startDate,
+            LocalDate endDate);
+
+    @Query("""
+            SELECT DISTINCT f
+            FROM Friend f
+            JOIN FriendCheckingLog fcl
+            ON fcl.friend = f
+            WHERE f.memberId = :memberId AND fcl.isChecked = true
+            AND fcl.createdAt BETWEEN :startDateTime AND :endDateTime
+            """)
+    List<Friend> findAllByMemberIdWithCheckedLogsInPeriod(
+            @Param("memberId") UUID memberId,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime);
+
 }
 

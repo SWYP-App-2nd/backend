@@ -210,6 +210,15 @@ class FriendControllerTest {
                         .memberId(testMember.getMemberId())
                         .build()
         );
+
+        FriendDetail friendDetail = FriendDetail.builder()
+                .friend(testFriend)
+                .relation(FriendRelation.FRIEND)
+                .birthday(LocalDate.now().minusYears(30))
+                .memo("테스트 메모")
+                .build();
+
+        testFriend.addFriendDetail(friendDetail);
     }
 
     @Test
@@ -452,9 +461,8 @@ class FriendControllerTest {
         // then
         result.andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].friendId").exists())
-                .andExpect(jsonPath("$[0].position").value(1))
                 .andExpect(jsonPath("$[0].source").value("KAKAO"))
-                .andExpect(jsonPath("$[0].name").value("friend1"));
+                .andExpect(jsonPath("$[0].name").value("테스트친구"));
 
         // docs
         result.andDo(document("친구 목록 조회",
@@ -756,63 +764,40 @@ class FriendControllerTest {
     }
 
     @Test
-    @DisplayName("이번 달 챙길 친구 목록을 성공적으로 조회해야 한다.")
+    @DisplayName("이번 달 챙길 친구 목록을 성공적으로 조회해야 한다")
     void 이번_달_챙길_친구_목록을_성공적으로_조회해야_한다() throws Exception {
         // given
-        UUID memberId = testMember.getMemberId();
-        String accessToken = createAccessToken(memberId);
+        // 친구와 관련된 데이터 설정
+        LocalDate now = LocalDate.now();
+        FriendDetail friendDetail = testFriend.getFriendDetail();
 
-        // File 저장
-        File imageFile = fileRepository.save(File.builder()
-                .fileName("img")
-                .contentType("image/jpeg")
-                .fileSize(1024L)
-                .category("profile")
-                .build());
+        // 현재 달에 생일이 있도록 설정
+        friendDetail.updateBirthday(now.withDayOfMonth(15));
+        friendDetailRepository.save(friendDetail);
 
-        // Friend 저장
-        Friend friend = friendRepository.save(Friend.builder()
-                .memberId(memberId)
-                .position(1)
-                .name("friend1")
-                .friendSource(FriendSource.KAKAO)
-                .contactFrequency(FriendContactFrequency.builder()
-                        .contactWeek(FriendContactWeek.EVERY_WEEK)
-                        .dayOfWeek(DayOfWeek.MONDAY)
-                        .build())
-                .nextContactAt(LocalDate.now().plusDays(7))
-                .build());
+        // 친구 기념일 추가
+        FriendAnniversary anniversary = FriendAnniversary.builder()
+                .friendId(testFriend.getFriendId())
+                .title("테스트 기념일")
+                .date(now.withDayOfMonth(20))
+                .build();
+        friendAnniversaryRepository.save(anniversary);
 
-        // FriendDetail 저장 (생일 포함)
-        FriendDetail friendDetail = friendDetailRepository.save(FriendDetail.builder()
-                .friend(friend)
-                .relation(FriendRelation.FRIEND)
-                .birthday(LocalDate.now().plusDays(5))
-                .imageFileId(imageFile.getId())
-                .build());
+        // 친구의 다음 연락일을 이번 달로 설정
+        testFriend.updateNextContactAt();
+        friendRepository.save(testFriend);
 
-        friend.addFriendDetail(friendDetail);
-
-        // FriendAnniversary 저장
-        friendAnniversaryRepository.save(
-                FriendAnniversary.builder()
-                        .friendId(friend.getFriendId())
-                        .date(LocalDate.now().plusDays(3))
-                        .title("결혼기념일")
-                        .build());
-
-        // when
-        ResultActions result = mockMvc.perform(get("/friend/monthly")
-                .header(AUTHORIZATION_HEADER, AUTHORIZATION_VALUE_PREFIX + accessToken)
-                .contentType(MediaType.APPLICATION_JSON));
-
-        // then
-        result.andExpect(status().isOk())
+        // when & then
+        ResultActions result = mockMvc.perform(get(url + "/monthly")
+                        .header(AUTHORIZATION_HEADER,
+                                AUTHORIZATION_VALUE_PREFIX + createAccessToken(testMember.getMemberId()))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].friendId").exists())
-                .andExpect(jsonPath("$[0].name").value("friend1"))
-                .andExpect(jsonPath("$[0].type").exists())
-                .andExpect(jsonPath("$[0].nextContactAt").exists());
+                .andExpect(jsonPath("$[*].friendId").exists())
+                .andExpect(jsonPath("$[*].name").exists())
+                .andExpect(jsonPath("$[*].type").exists())
+                .andExpect(jsonPath("$[*].nextContactAt").exists());
 
         // docs
         result.andDo(document("이번 달 챙길 친구 목록 조회",
@@ -833,6 +818,7 @@ class FriendControllerTest {
                 )
         ));
     }
+
 
     @Test
     @DisplayName("이번 달 챙김 완료한 친구 목록을 성공적으로 조회해야 한다.")

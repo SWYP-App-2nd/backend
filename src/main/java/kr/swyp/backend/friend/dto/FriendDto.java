@@ -15,6 +15,7 @@ import kr.swyp.backend.friend.domain.FriendContactFrequency;
 import kr.swyp.backend.friend.domain.FriendDetail;
 import kr.swyp.backend.friend.enums.FriendContactWeek;
 import kr.swyp.backend.friend.enums.FriendRelation;
+import kr.swyp.backend.friend.enums.FriendRemind;
 import kr.swyp.backend.friend.enums.FriendSource;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -313,7 +314,7 @@ public class FriendDto {
 
         private UUID friendId;
         private String name;
-        private String type;
+        private FriendRemind type;
         private LocalDate nextContactAt;
     }
 }

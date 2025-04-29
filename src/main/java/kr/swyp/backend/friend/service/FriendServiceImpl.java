@@ -28,6 +28,7 @@ import kr.swyp.backend.friend.dto.FriendDto.FriendDetailUpdateRequest;
 import kr.swyp.backend.friend.dto.FriendDto.FriendDetailUpdateRequest.FriendAnniversaryDetailUpdateRequest;
 import kr.swyp.backend.friend.dto.FriendDto.FriendListResponse;
 import kr.swyp.backend.friend.dto.FriendDto.FriendNearResponse;
+import kr.swyp.backend.friend.enums.FriendRemind;
 import kr.swyp.backend.friend.repository.FriendAnniversaryRepository;
 import kr.swyp.backend.friend.repository.FriendCheckingLogRepository;
 import kr.swyp.backend.friend.repository.FriendDetailRepository;
@@ -319,6 +320,9 @@ public class FriendServiceImpl implements FriendService {
     @Transactional(readOnly = true)
     public List<FriendNearResponse> getMonthlyFriendNearList(UUID memberId) {
         LocalDate now = LocalDate.now();
+        int currentYear = now.getYear();
+
+        // 친구 디테일 조회
         List<FriendDetail> friendDetailList = friendDetailRepository
                 .findAllByFriend_MemberIdAndBirthdayBetween(
                         memberId,
@@ -333,10 +337,15 @@ public class FriendServiceImpl implements FriendService {
 
         // 기념일 목록 조회
         List<FriendAnniversary> friendAnniversaryList = friendAnniversaryRepository
-                .findAllByFriendIdIsInAndCreatedAtBetween(friendIdList,
-                        now.withDayOfMonth(1).atStartOfDay(),
-                        now.withDayOfMonth(now.lengthOfMonth())
-                                .atTime(LocalTime.of(23, 59, 59)));
+                .findAllByFriendIdIsInAndDateBetween(friendIdList,
+                        now.withDayOfMonth(1),
+                        now.withDayOfMonth(now.lengthOfMonth()));
+
+        // 친구 조회
+        List<Friend> friendList = friendRepository.findAllByMemberIdAndNextContactAtBetween(
+                memberId,
+                now.withDayOfMonth(1),
+                now.withDayOfMonth(now.lengthOfMonth()));
 
         // 친구 상세 정보로부터 응답 객체 생성
         List<FriendNearResponse> birthdayResponses = friendDetailList
@@ -344,11 +353,18 @@ public class FriendServiceImpl implements FriendService {
                 .filter(detail -> detail.getBirthday() != null)
                 .map(detail -> {
                     Friend friend = detail.getFriend();
+                    LocalDate birthday = detail.getBirthday();
+                    // 생일을 올해 날짜로 변환
+                    LocalDate thisYearBirthday = birthday.withYear(currentYear);
+                    // 이미 지난 경우, 내년 생일로 설정
+                    LocalDate nextBirthday = thisYearBirthday.isBefore(now)
+                            ? thisYearBirthday.plusYears(1) : thisYearBirthday;
+
                     return FriendNearResponse.builder()
                             .friendId(friend.getFriendId())
                             .name(friend.getName())
-                            .type("birthday") // 생일 타입 설정
-                            .nextContactAt(friend.getNextContactAt())
+                            .type(FriendRemind.BIRTHDAY) // 생일 타입 설정
+                            .nextContactAt(nextBirthday)
                             .build();
                 })
                 .toList();
@@ -362,19 +378,38 @@ public class FriendServiceImpl implements FriendService {
                             .orElseThrow(() -> new NoSuchElementException(
                                     "친구를 찾을 수 없습니다: " + anniversary.getFriendId()));
 
+                    LocalDate anniversaryDate = anniversary.getDate();
+                    // 기념일을 올해 날짜로 변환
+                    LocalDate thisYearAnniversary = anniversaryDate.withYear(currentYear);
+                    // 이미 지난 경우, 내년 기념일로 설정
+                    LocalDate nextAnniversary = thisYearAnniversary.isBefore(now)
+                            ? thisYearAnniversary.plusYears(1) : thisYearAnniversary;
+
                     return FriendNearResponse.builder()
                             .friendId(anniversary.getFriendId())
                             .name(friend.getName())
-                            .type(anniversary.getTitle()) // 기념일 제목을 타입으로 설정
-                            .nextContactAt(friend.getNextContactAt())
+                            .type(FriendRemind.ANNIVERSARY) // 기념일 제목을 타입으로 설정
+                            .nextContactAt(nextAnniversary)
                             .build();
                 })
                 .toList();
 
-        // 두 리스트 합치기
+        // 메시지 응답 객체 생성
+        List<FriendNearResponse> messageResponse = friendList
+                .stream()
+                .map(friend -> FriendNearResponse.builder()
+                        .friendId(friend.getFriendId())
+                        .name(friend.getName())
+                        .type(FriendRemind.MESSAGE)
+                        .nextContactAt(friend.getNextContactAt())
+                        .build())
+                .toList();
+
+        // 결과 합치기
         List<FriendNearResponse> result = new ArrayList<>();
         result.addAll(birthdayResponses);
         result.addAll(anniversaryResponses);
+        result.addAll(messageResponse);
 
         return result;
     }
@@ -395,6 +430,12 @@ public class FriendServiceImpl implements FriendService {
                 .stream()
                 .map(Friend::getFriendId)
                 .toList();
+
+        List<Friend> friendList = friendRepository.findAllByMemberIdWithCheckedLogsInPeriod(
+                memberId,
+                now.withDayOfMonth(1).atStartOfDay(),
+                now.withDayOfMonth(now.lengthOfMonth()).atTime(LocalTime.of(23, 59, 59))
+        );
 
         List<Long> friendCheckingLogIdList = friendCheckingLogRepository
                 .findAllByFriend_FriendIdIsInAndIsCheckedTrueAndCreatedAtBetweenOrderByCreatedAtDesc(
@@ -419,8 +460,8 @@ public class FriendServiceImpl implements FriendService {
                     return FriendNearResponse.builder()
                             .friendId(friend.getFriendId())
                             .name(friend.getName())
-                            .type("birthday") // 생일 타입 설정
-                            .nextContactAt(friend.getNextContactAt())
+                            .type(FriendRemind.BIRTHDAY) // 생일 타입 설정
+                            .nextContactAt(detail.getBirthday().plusYears(1))
                             .build();
                 })
                 .toList();
@@ -437,16 +478,26 @@ public class FriendServiceImpl implements FriendService {
                     return FriendNearResponse.builder()
                             .friendId(anniversary.getFriendId())
                             .name(friend.getName())
-                            .type(anniversary.getTitle()) // 기념일 제목을 타입으로 설정
-                            .nextContactAt(friend.getNextContactAt())
+                            .type(FriendRemind.ANNIVERSARY) // 기념일 제목을 타입으로 설정
+                            .nextContactAt(anniversary.getDate().plusYears(1))
                             .build();
                 })
                 .toList();
+
+        List<FriendNearResponse> messageResponse = friendList
+                .stream()
+                .map(friend -> FriendNearResponse.builder()
+                        .friendId(friend.getFriendId())
+                        .name(friend.getName())
+                        .type(FriendRemind.MESSAGE)
+                        .nextContactAt(friend.getNextContactAt())
+                        .build()).toList();
 
         // 두 리스트 합치기
         List<FriendNearResponse> result = new ArrayList<>();
         result.addAll(birthdayResponses);
         result.addAll(anniversaryResponses);
+        result.addAll(messageResponse);
 
         return result;
     }
