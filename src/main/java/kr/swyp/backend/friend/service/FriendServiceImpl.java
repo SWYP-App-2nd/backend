@@ -240,6 +240,7 @@ public class FriendServiceImpl implements FriendService {
         // Friend 업데이트
         friend.updateName(request.getName());
         friend.updateFriendContactFrequency(request.getContactFrequency());
+        friend.updateNextContactAt();
 
         // FriendDetail 업데이트
         FriendDetail friendDetail = friend.getFriendDetail();
